@@ -57,8 +57,8 @@
 
 #ifndef LibraryDROBOT_h
 #define LibraryDROBOT_h
-#include "Arduino.h" 
-#include "M5Core2.h" 
+#include "Arduino.h"
+#include "M5Core2.h"
 #include "Adafruit_MCP23X17.h"
 #endif
 
@@ -480,8 +480,8 @@ private:
   int Motor_Alarm_Pin;   //Alarm Pin
   int Motor_Ped_Pin;     // Confirmation bit for reaching the new stepp
 
-Adafruit_MCP23X17 I2C_Exp_Class2;
- 
+  Adafruit_MCP23X17 I2C_Exp_Class2;
+
 
 
 
@@ -495,11 +495,13 @@ Adafruit_MCP23X17 I2C_Exp_Class2;
   bool Motor_Position_Value = Motor_Position_right;  //1 = right. 0 = left
 
   int Dip_Switch_Value = 0;
+
+  //Error Code
   /* 1 = Alarm Pin Motor
     2 = Old Angle Value Wrong
     3=  New Angle Value Wrong
     4= Step failed
-    5= 
+    5= Step Time out of Tollerance
     6= 
     7= 
     8= 
@@ -536,14 +538,24 @@ Adafruit_MCP23X17 I2C_Exp_Class2;
 public:
   //Attributes
   double Motor_Angle_Value = 0;
-  double Angle_Per_step = 0;
+  double Angle_Per_step = 0;  //	360 / StepsPerRotation
   double Steps_Per_rev = 0;
+  double RPM_SetPoint_Value = 0;         //	setpoint value
+  double RPM_ProcessVariable_Value = 0;  //	calculating the actual value
+  double RPM_Error_Value = 0;            //	calculate the difference between setpoint and actual value
+  double Time_PerRotation_Value = 0;     //	RPM_SetPoint_Value - RPM_ProcessVariable_Value
+  double Time_PerStep_Value = 0;         //	(60 / RPM_ProcessVariable_Value) / StepsPerRotation:
+  double Frequency_Pulse_Value = 0;      //	1/Time_PerStep_Value
+  double Time_PulseHigh_Value = 0;       //	Time_PerStep_Value * 0.5
+  double Time_PulseLow_Value = 0;        //	Time_PerStep_Value * 0.5
+  double Frequency_I2CBus_Value = 0;     //	Frequency_Pulse_Value * 2
+
 
   int errorcode = 0;
 
   //Methods
   //Method to configure the Motor Object. - Hardware Pin Mapping and DipSwitch Position
-  void setupMotor(bool MotorPos, int EnPin, int PullPin, int DirPin, int AlmPin, int PedPin, int DipSwitch) {  //Motor Pin Configuration
+  void setupMotor(bool MotorPos, int EnPin, int PullPin, int DirPin, int AlmPin, int PedPin, int RPM, int DipSwitch) {  //Motor Pin Configuration
     Motor_Enable_Pin = EnPin;
     Motor_Pull_Pin = PullPin;
     Motor_Dir_Pin = DirPin;
@@ -554,16 +566,29 @@ public:
     Steps_Per_rev = Dip_Switch_Array[DipSwitch][1];   //Read Value Steps per Revolution from Dip Switch Array
     Motor_Position_Value = MotorPos;
 
+    RPM_SetPoint_Value = RPM;
 
 
+    Time_PerRotation_Value = 60 / RPM_SetPoint_Value;
+    Time_PerStep_Value = (60 / RPM_SetPoint_Value) / Steps_Per_rev;
+    Frequency_Pulse_Value = 1 / Time_PerStep_Value;
+    Time_PulseHigh_Value = Time_PerStep_Value * 0.5;
+    Time_PulseLow_Value = Time_PerStep_Value * 0.5;
+    Frequency_I2CBus_Value = Frequency_Pulse_Value * 2;
   }
 
-  void test(){
+  void test() {
     Serial.println("MotorClassTest: Turn on LED 15");
-  M5.lcd.println("MotorClassTest: Turn on LED 15");
-  //I2C_Exp_Class2.begin_I2C();
-  I2C_Exp_Class2.digitalWrite(0, LOW);
-}
+    M5.lcd.println("MotorClassTest: Turn on LED 15");
+    if (!I2C_Exp_Class2.begin_I2C()) {
+      Serial.println("Error.I2C2");
+      M5.lcd.println("Error.I2C2");
+      while (1)
+        ;
+    }
+    I2C_Exp_Class2.pinMode(0, OUTPUT);
+    I2C_Exp_Class2.digitalWrite(0, LOW);
+  }
 
   void enableMotor() {
     Motor_Enable_Value = true;
@@ -577,7 +602,7 @@ public:
   }
 
   bool startSurvilance() {
-  I2C_Exp_Class2.begin_I2C();
+    I2C_Exp_Class2.begin_I2C();
     if (!digitalRead(Motor_Alarm_Pin)) {
       Motor_Enable_Value = false;
       Serial.println("ALARM");
@@ -634,12 +659,12 @@ public:
       return (1);
     } else if (!Motor_Position_Value and (Angle >= 90) and (Angle <= 270))  //if motorposition is left / 90°=<x<=270°
     {
-      New_Angle_Value = Angle+90;    //Add 90° to make it positiv.
+      New_Angle_Value = Angle + 90;  //Add 90° to make it positiv.
       Serial.print("setNewAngleValue l ");
       Serial.println(New_Angle_Value);
       M5.lcd.print("setNewAngleValue l ");
       M5.lcd.println(New_Angle_Value);
-       while (Angle >= 360) { Angle = Angle - 360; }  //if Angle between 270 and 360, it will be changed to a value between 0 and 90
+      while (Angle >= 360) { Angle = Angle - 360; }  //if Angle between 270 and 360, it will be changed to a value between 0 and 90
       return (1);
     } else {
       return (0);  //returns error Message (Angle Value Wrong)
@@ -661,7 +686,7 @@ public:
     delayMicroseconds(5);
     I2C_Exp_Class2.digitalWrite(Motor_Pull_Pin, 1);  //send one Pulse
     delayMicroseconds(5);
-    I2C_Exp_Class2.digitalWrite(Motor_Pull_Pin, 0);                                            // maybe needs to be an Interupt
+    I2C_Exp_Class2.digitalWrite(Motor_Pull_Pin, 0);                             // maybe needs to be an Interupt
     while (digitalRead(!Motor_Ped_Pin) and (counter < 100000)) { counter++; };  //wait until position has been reached
     if (counter > 10000) {
       Serial.println("Warning: Step took too much time");  //Warning it took more than 10000 tries
@@ -679,6 +704,12 @@ public:
   bool OneStepDir(/*bool direction*/) {
     bool I_did_one_Step = false;
     long int counter = 0;
+    double Step_Time_Value;
+
+    //start timer
+    us_timer_state = 1;
+    us_timer_value = Time_PerStep_Value;
+    us_timer_start = micros();
     enableMotor();
 
     if (startSurvilance()) {
@@ -697,21 +728,38 @@ public:
         M5.lcd.println("Tryng to fix it");
 
         if (New_Angle_Value > Old_Angle_Value) {
-          while ((I_did_one_Step == 0) and (counter < 100000)) {  // try as until you did one Stepbut try not more than 100000 times.
+          while ((I_did_one_Step == 0) and (counter < 100000) and startSurvilance() ) {  // try as until you did one Stepbut try not more than 100000 times.
             I_did_one_Step = moveOneStep(Motor_Turn_right);
             counter++;
           };
           counter = 0;
           I_did_one_Step = 0;
-        } else if (New_Angle_Value < Old_Angle_Value) //if the new Angle is smaller than the old turn the motor left to make the difference smaller.
+        } else if (New_Angle_Value < Old_Angle_Value)  //if the new Angle is smaller than the old turn the motor left to make the difference smaller.
         {
-          while ((I_did_one_Step == 0) and (counter < 100000)) {  // try as until you did one Stepbut try not more than 100000 times.
+          while ((I_did_one_Step == 0) and (counter < 100000) and startSurvilance()) {  // try as until you did one Stepbut try not more than 100000 times.
             I_did_one_Step = moveOneStep(Motor_Turn_left);
             counter++;
           };
           counter = 0;
-          I_did_one_Step = 0; //normaly 0
+          I_did_one_Step = 0;  //normaly 0
         }
+
+        while (us_timer_state and startSurvilance()) {  //wait if time per step is too short
+          if (us_timer_start + us_timer_value > micros()) {
+            us_timer_state = 0;
+            Step_Time_Value = (micros() - us_timer_start)/1000;
+            Serial.print("- StepTime: ");
+             Serial.println(Step_Time_Value);
+
+            M5.lcd.print("- StepTime: ");
+            M5.lcd.println(Step_Time_Value);
+
+            if ((Step_Time_Value) >= (us_timer_value * 1.1)) errorcode = 5;
+          }
+        }
+
+        disableMotor();
+        return (1);
       }
     }
   }
