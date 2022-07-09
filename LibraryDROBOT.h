@@ -561,7 +561,7 @@ public:
   void test(){
     Serial.println("MotorClassTest: Turn on LED 15");
   M5.lcd.println("MotorClassTest: Turn on LED 15");
-  I2C_Exp_Class2.begin_I2C();
+  //I2C_Exp_Class2.begin_I2C();
   I2C_Exp_Class2.digitalWrite(0, LOW);
 }
 
