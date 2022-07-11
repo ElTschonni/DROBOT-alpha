@@ -15,7 +15,7 @@
   //Change Log 
 2022-06-29_DROBOT_v00.002.ino  - Setup Modbus Server
 2022-07-08_DROBOT_v00.007.ino  - I2C Library
-2022-07
+2022-07-10_DROBOT_v00.010.cpp -- portation to platformio. - small changes to test I2C library, so far LED on.
   |---------------------------------------------------------------------------------|
   //=========| include librarys |==================================================*/
 #include "LibraryDROBOT.h"  // Robot controll
