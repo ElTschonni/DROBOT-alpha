@@ -28,7 +28,6 @@
 #include <Adafruit_MCP23X17.h>
 
 
-
 //=========| definiere Werte |==================================================*/
 #define ON HIGH
 #define OFF LOW
