@@ -75,8 +75,10 @@ const int STATUS_HREG = 5;  // Hreg 5 für den Zustand der StateMachine
 //ModbusIP object
 ModbusIP mb;
 WiFiMulti wiFiMulti;
-Adafruit_MCP23X17 GPIO_Ports_Instanz;  //creating the MCP23017 Class
-Closed_Loop_Step_Motor Motor_Left_Class(GPIO_Ports_Instanz);//creating the Stepper Motor Class
+Adafruit_MCP23X17 GPIO_Ports_Instanz;  //creating the MCP23017 Instance
+Closed_Loop_Step_Motor Motor_Left_Ins(&GPIO_Ports_Instanz);//creating the Left Motor Instance
+Closed_Loop_Step_Motor Motor_Right_Ins(&GPIO_Ports_Instanz);//creating the Right Motor Instance
+
 
 //==============================================================================*/
 //=========| deklaration von Variabeln |========================================*/
@@ -226,7 +228,7 @@ int Draw() {  //State 3
   Serial.println("------ Draw -------");
   delay(500);
   Serial.print("Robot is Calculationg Coordinates ");
-  Motor_Left_Class.test();//Motor Class Test
+  Motor_Left_Ins.test();//Motor Class Test
   delay(500);
   Serial.print("Robot is Calculationg Route ");
   delay(500);

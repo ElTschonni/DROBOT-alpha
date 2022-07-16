@@ -53,8 +53,8 @@ private:
   int Motor_Alarm_Pin;   //Alarm Pin
   int Motor_Ped_Pin;     // Confirmation bit for reaching the new stepp
 
-  //Adafruit_MCP23X17 GPIO_Ports_Instanz;
-
+  //  Adafruit_MCP23X17 GPIO_I2C_Exp;
+Adafruit_MCP23X17 *GPIO_I2C_Exp;
 
 
 
@@ -127,9 +127,11 @@ public:
   int errorcode = 0;
 
 
-Closed_Loop_Step_Motor(Adafruit_MCP23X17 GPIO_Ports_Instanz){
+Closed_Loop_Step_Motor(Adafruit_MCP23X17 *GPIO_instance){
 
-    GPIO_Ports_Instanz.begin_I2C();
+GPIO_I2C_Exp = GPIO_instance;
+
+  
 }
     
    
@@ -163,7 +165,11 @@ Closed_Loop_Step_Motor(Adafruit_MCP23X17 GPIO_Ports_Instanz){
     Serial.println("MotorClassTest: Turn on LED 15");
     M5.lcd.println("MotorClassTest: Turn on LED 15");
 
-    GPIO_Ports_Instanz.digitalWrite(0, LOW);
+    GPIO_I2C_Exp->digitalWrite(0, LOW);
+    delay(1000);
+        GPIO_I2C_Exp->digitalWrite(0, HIGH);
+
+
   }
 
   void enableMotor() {
@@ -178,7 +184,7 @@ Closed_Loop_Step_Motor(Adafruit_MCP23X17 GPIO_Ports_Instanz){
   }
 
   bool startSurvilance() {
-    GPIO_Ports_Instanz.begin_I2C();
+  //  GPIO_I2C_Exp->begin_I2C();
     if (!digitalRead(Motor_Alarm_Pin)) {
       Motor_Enable_Value = false;
       Serial.println("ALARM");
@@ -188,7 +194,7 @@ Closed_Loop_Step_Motor(Adafruit_MCP23X17 GPIO_Ports_Instanz){
     } else {
       return (1);
     };
-    GPIO_Ports_Instanz.digitalWrite(Motor_Enable_Pin, Motor_Enable_Value);
+    GPIO_I2C_Exp->digitalWrite(Motor_Enable_Pin, Motor_Enable_Value);
   }
 
 
@@ -257,12 +263,12 @@ Closed_Loop_Step_Motor(Adafruit_MCP23X17 GPIO_Ports_Instanz){
   //MotorMovement Methodes
   bool moveOneStep(bool direction) {
     long int counter;
-    GPIO_Ports_Instanz.begin_I2C();
-    GPIO_Ports_Instanz.digitalWrite(Motor_Dir_Pin, direction);  //set direction 1= right 0 =left
+    //GPIO_I2C_Exp.begin_I2C();
+    GPIO_I2C_Exp->digitalWrite(Motor_Dir_Pin, direction);  //set direction 1= right 0 =left
     delayMicroseconds(5);
-    GPIO_Ports_Instanz.digitalWrite(Motor_Pull_Pin, 1);  //send one Pulse
+    GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 1);  //send one Pulse
     delayMicroseconds(5);
-    GPIO_Ports_Instanz.digitalWrite(Motor_Pull_Pin, 0);                             // maybe needs to be an Interupt
+    GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 0);                             // maybe needs to be an Interupt
     while (digitalRead(!Motor_Ped_Pin) and (counter < 100000)) { counter++; };  //wait until position has been reached
     if (counter > 10000) {
       Serial.println("Warning: Step took too much time");  //Warning it took more than 10000 tries
