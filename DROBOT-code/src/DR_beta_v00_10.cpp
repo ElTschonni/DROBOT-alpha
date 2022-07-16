@@ -244,19 +244,19 @@ double old_Angle_value = 0;
 double new_Angle_value = 0;
 
 
-  delay(500);
+  //delay(500);
   Serial.println("Robot is Calculationg Coordinates ");
   //MotorControll Motor Left
   Motor_Left_Ins.test();  //Motor Class Test
 
-    delay(500);
+   // delay(500);
   Serial.println("Robot is Calculationg Route ");
 
  if(Motor_Left_Ins.setNewAngelValue(90))  Serial.println("Motor Left Set Angle: Succeed");
 else{Serial.println("Motor Left Set Angle: Failed");
 return(5);}
 
- delay(500);
+ //delay(500);
 
   Serial.println("Robot is drawing ");
    Serial.print("Old Angle: ");
@@ -275,7 +275,7 @@ while (!Motor_Left_Ins.Angle_Tollerance_Value){
   while(!Motor_Left_Ins.OneStepDir())  { }
 }
 
-    delay(500);
+  //  delay(500);
 
   Start_StateMachine = false;
   Status = 1;
@@ -382,11 +382,17 @@ int Init() { // State 6
   Serial.println(Motor_Left_Ins.Frequency_I2CBus_Value);
   M5.lcd.println(Motor_Left_Ins.Frequency_I2CBus_Value);
 
-
   Serial.println("Init: Motor Left Succeed");
   M5.lcd.println("Init: Motor Left Succeed");
 
-  //Initialize Motor Left
+ Serial.print("PEDL: ");
+Serial.println(GPIO_Ports_Instanz.digitalRead(Mleft_Ped_Pin));
+ Serial.print("ALML: ");
+Serial.println(GPIO_Ports_Instanz.digitalRead(Mleft_Alarm_Pin));
+
+Motor_Left_Ins.enableMotor();
+
+  //Initialize Motor Right
   Serial.println("Init: Motor Right");
   M5.lcd.println("Init: Motor Right");
 
@@ -527,14 +533,14 @@ void setup() {
   GPIO_Ports_Instanz.pinMode(Mright_Alarm_Pin, INPUT_PULLUP);    //	Alarm+ Whiteblack Motor Left
   GPIO_Ports_Instanz.pinMode(Mright_Ped_Pin, INPUT_PULLUP);      //	Ped+ GreenBlack Motor Left
   GPIO_Ports_Instanz.pinMode(Reed_Sensor_Pin, INPUT_PULLUP);     //	Reed / Push Sensor
-  GPIO_Ports_Instanz.pinMode(Mvertical_Down_Pin, INPUT_PULLUP);  //	Vertical Down
+  GPIO_Ports_Instanz.pinMode(Mvertical_Down_Pin, OUTPUT);  //	Vertical Down
   GPIO_Ports_Instanz.pinMode(Mvertical_Up_Pin, OUTPUT);          //	Vertical Up
   GPIO_Ports_Instanz.pinMode(Clamp_Servo_Pin, OUTPUT);           //	Clamp Orange Servo
-  GPIO_Ports_Instanz.pinMode(End_Button2_Pin, OUTPUT);           //	End_Button 2 left
-  GPIO_Ports_Instanz.pinMode(End_Button1_Pin, OUTPUT);           //	End_Button 1 right
+  GPIO_Ports_Instanz.pinMode(End_Button2_Pin, INPUT_PULLUP);           //	End_Button 2 left
+  GPIO_Ports_Instanz.pinMode(End_Button1_Pin, INPUT_PULLUP);           //	End_Button 1 right
   GPIO_Ports_Instanz.pinMode(Mleft_Ped_Pin, INPUT_PULLUP);       //	Ped+ GreenBlack Motor Left
   GPIO_Ports_Instanz.pinMode(Mleft_Alarm_Pin, INPUT_PULLUP);     //	Alarm+ Whiteblack Motor Left
-  GPIO_Ports_Instanz.pinMode(Mleft_En_Pin, INPUT_PULLUP);        //	En + BrownBlack Motor Left&Right
+  GPIO_Ports_Instanz.pinMode(Mleft_En_Pin, OUTPUT);        //	En + BrownBlack Motor Left&Right
   GPIO_Ports_Instanz.pinMode(Mleft_Dir_Pin, OUTPUT);             //	Dir+ White Motor Left
   GPIO_Ports_Instanz.pinMode(Mleft_Pull_Pin, OUTPUT);            //	Pull+ Blue Motor Left
 

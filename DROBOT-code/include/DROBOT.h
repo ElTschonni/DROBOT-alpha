@@ -165,19 +165,47 @@ public:
     M5.lcd.println("MotorClassTest: Turn on LED 15");
 
     GPIO_I2C_Exp->digitalWrite(0, LOW);
-    delay(1000);
+
+
     GPIO_I2C_Exp->digitalWrite(0, HIGH);
+
+
+    GPIO_I2C_Exp->digitalWrite(Motor_Dir_Pin, 1);  //set direction 1= right 0 =left
+    delayMicroseconds(5);
+    GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 1);  //send one Pulse
+  delayMicroseconds(5);
+    GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 0);
+    
+  //enableMotor();
+
+
+      GPIO_I2C_Exp->digitalWrite(0, LOW);
+   // enableMotor();
+    //startSurvilance();
+    GPIO_I2C_Exp->digitalWrite(0, HIGH);
+
+    GPIO_I2C_Exp->digitalWrite(Motor_Dir_Pin, 1);  //set direction 1= right 0 =left
+ delay(1);
+    GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 1);  //send one Pulse
+ delay(1);
+    GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 0);
+    
+ disableMotor();
+
+
   }
 
   void enableMotor() {
-    Motor_Enable_Value = true;
+    Motor_Enable_Value = HIGH;
     Serial.println(" MotorEnabled ");
     M5.lcd.println(" MotorEnabled ");
+    GPIO_I2C_Exp->digitalWrite(Motor_Enable_Pin, Motor_Enable_Value);
   }
   void disableMotor() {
-    Motor_Enable_Value = false;
+    Motor_Enable_Value = LOW;
     Serial.println(" MotorDisabled ");
     M5.lcd.println(" MotorDisabled ");
+    GPIO_I2C_Exp->digitalWrite(Motor_Enable_Pin, Motor_Enable_Value);
   }
 
   bool startSurvilance() {
@@ -261,34 +289,40 @@ public:
 
   //MotorMovement Methodes
   bool moveOneStep(bool direction) {
-    long int counter;
+    long int counter =0;
     //GPIO_I2C_Exp.begin_I2C();
     GPIO_I2C_Exp->digitalWrite(Motor_Dir_Pin, direction);  //set direction 1= right 0 =left
     delayMicroseconds(5);
     GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 1);  //send one Pulse
     delayMicroseconds(5);
     GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 0);
-    // maybe needs to be an Interupt
-   while (GPIO_I2C_Exp->digitalRead(!Motor_Ped_Pin) and (counter < 100000)) { counter++; };  //wait until position has been reached
-    if (counter > 10000) {
-      Serial.print(" Warning: No PED Response ");  //Warning it took more than 10000 tries
-      M5.lcd.print(" Warning: No PED Response ");
-    }
-    return (1);  //it was successfull
 
+    // maybe needs to be an Interupt
+   /*while (!(GPIO_I2C_Exp->digitalRead(Motor_Ped_Pin)) and (counter < 100000)) { counter++; };  //wait until position has been reached
+    
+    if (counter > 10000) {
+      Serial.print(" Warning: No PED Response: ");  //Warning it took more than 10000 tries
+      M5.lcd.print(" Warning: No PED Response ");
+      Serial.print(counter);
+      Serial.print("Motor_Ped_Pin");
+      Serial.print(GPIO_I2C_Exp->digitalRead(Motor_Ped_Pin));
+      
+    }*/
+    return (1);  //it was successfull
+/*
     if (counter > 90000) {
       return (0);  //error - try again
       Serial.print(" Error: Step failed");
       M5.lcd.print(" Error: Step failed");
       errorcode = 4;
-    }
+    }*/
   }
 
   bool OneStepDir(/*bool direction*/) {
     bool I_did_one_Step = false;
     unsigned long counter = 0;
     unsigned long Step_Time_Value;
-    bool survilance = 0;
+    bool survilance = 1;
     double Max_AngleDev_value = 0;
     double Min_AngleDev_value = 0;
 
@@ -301,8 +335,8 @@ public:
     Max_AngleDev_value = New_Angle_Value + Angle_Per_step * 1.05;
     Min_AngleDev_value = New_Angle_Value - Angle_Per_step * 1.05;
 
-    enableMotor();
-    survilance = startSurvilance();
+    //enableMotor();
+   // survilance = startSurvilance();
 
     if (survilance) {
         Serial.print(" New_Angle_Value: ");
@@ -345,7 +379,7 @@ public:
         M5.lcd.print("dir ccw");*/
 
         while ((I_did_one_Step == 0) and (counter < 100000) and survilance) {  // try as until you did one Stepbut try not more than 100000 times.
-          survilance = startSurvilance();
+        //  survilance = startSurvilance();
           I_did_one_Step = moveOneStep(Motor_Turn_right);
           counter++;
         };
@@ -365,27 +399,34 @@ public:
       while (us_timer_state and survilance) {  //wait if time per step is to short
         survilance = startSurvilance();
 
+
+
+        if ((us_timer_value) < (micros() - us_timer_start)) {
+          us_timer_state = 0;
+
+          
           Serial.print(" us_timer_value: "); 
         Serial.print(us_timer_value);
            Serial.print(" < micros: ");
           Serial.print(micros()- us_timer_start);
-        if ((us_timer_value) < (micros() - us_timer_start)) {
-          us_timer_state = 0;
 
 
           Step_Time_Value = (micros() - us_timer_start) / 1000;
           Serial.print(" StepTime: ");
-          Serial.print(Step_Time_Value);
+          Serial.println(Step_Time_Value);
 
           M5.lcd.print(" StepTime: ");
           M5.lcd.print(Step_Time_Value);
 
           if ((Step_Time_Value) >= (us_timer_value / 990)) errorcode = 5;
+
+          
+         us_timer_state = 0;
+       // disableMotor();
+        return (1);
         }
 
-         us_timer_state = 0;
-        disableMotor();
-        return (1);
+
           }
 
 
