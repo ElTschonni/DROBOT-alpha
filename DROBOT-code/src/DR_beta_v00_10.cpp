@@ -41,11 +41,8 @@
 #define Mright 1
 #define Mleft 0
 
-#define Mright_Speed_Value 1  //initial Motor Speed in RPM
-#define Mleft_Speed_Value 1   //initial Motor Speed in RPM
-
-#define Mright_DIPSW_Value 0b1011  //initial Motor Speed in RPM
-#define Mleft_DIPSW_Value 0b1011  //initial Motor Speed in RPM
+#define Mright_DIPSW_Value 0b1101  //initial Motor Speed in RPM
+#define Mleft_DIPSW_Value 0b1101  //initial Motor Speed in RPM
 
 
 
@@ -121,6 +118,11 @@ float Alpha;
 float Px, Xaktuell, Xneu;
 float Py, Yaktuell, Yneu;
 
+
+// Motor Variabeln
+int Mright_Speed_Value = 1;  //initial Motor Speed in RPM
+int Mleft_Speed_Value = 1;  //initial Motor Speed in RPM
+
 //==============================================================================*/
 //=========| Funktionen ModBus |=========================================*/
 
@@ -163,7 +165,7 @@ uint16_t CBneuerParameterF(TRegister* reg, uint16_t val) {
 
 
 
-int Standby()  //State1
+int Standby()  //State 1
 {
   Serial.println("------ Standby -------");
 
@@ -186,7 +188,7 @@ int Standby()  //State1
   return (2);
 }
 
-int Receive()  //Verarbeitung
+int Receive()  //State 2 Verarbeitung
 {
   mb.task();
   Serial.println("------ State Receive------");
@@ -238,15 +240,41 @@ int Receive()  //Verarbeitung
 
 int Draw() {  //State 3
   Serial.println("------ Draw -------");
-  delay(500);
-  Serial.print("Robot is Calculationg Coordinates ");
-  //MotorControll Motor Left
+double old_Angle_value = 0;
+double new_Angle_value = 0;
 
+
+  delay(500);
+  Serial.println("Robot is Calculationg Coordinates ");
+  //MotorControll Motor Left
   Motor_Left_Ins.test();  //Motor Class Test
-  delay(500);
-  Serial.print("Robot is Calculationg Route ");
-  delay(500);
-  Serial.print("Robot is drawing ");
+
+    delay(500);
+  Serial.println("Robot is Calculationg Route ");
+
+ if(Motor_Left_Ins.setNewAngelValue(90))  Serial.println("Motor Left Set Angle: Succeed");
+else{Serial.println("Motor Left Set Angle: Failed");
+return(5);}
+
+ delay(500);
+
+  Serial.println("Robot is drawing ");
+   Serial.print("Old Angle: ");
+    Serial.println(Motor_Left_Ins.getOldAngelValue());
+       Serial.print("New Angle: ");
+    Serial.println(Motor_Left_Ins.getNewAngelValue());
+
+old_Angle_value = Motor_Left_Ins.getOldAngelValue();
+new_Angle_value = Motor_Left_Ins.getNewAngelValue();
+
+
+while (Motor_Left_Ins.getNewAngelValue() != Motor_Left_Ins.getOldAngelValue()){
+
+Serial.print("in the loop");
+  while(!Motor_Left_Ins.OneStepDir())  {  }
+}
+
+  
   delay(500);
 
   Start_StateMachine = false;
@@ -255,21 +283,22 @@ int Draw() {  //State 3
   return (1);
 }
 
-int WrongCommand()  //Programm 4, steuert die Motoren
+int WrongCommand()  //State 4, steuert die Motoren
 {
   Serial.println("------ Wrong Command -------");
   Status = 1;
   return (1);
 }
 
-int Error() {
+int Error() { //State 5 
   Serial.println("------ Error -------");
+  Status = 4;
 
   return (1);
 }
 
 
-int Init() {
+int Init() { // State 6
   Serial.println("------ Initialize -------");
   M5.lcd.println("------ Initialize -------");
   //Initialize Motor Left
@@ -286,69 +315,70 @@ int Init() {
     Mleft_Speed_Value,
     Mleft_DIPSW_Value);
 
-  Serial.print("Mleft: ");
-  M5.lcd.print("Mleft: ");
+  Serial.print(" Mleft: ");
+  M5.lcd.print(" Mleft: ");
 
-  Serial.print("RPM: ");
-  M5.lcd.print("RPM: ");
-  Serial.print(Mleft_Speed_Value);
-  M5.lcd.print(Mleft_Speed_Value);
+  Serial.print(" RPM: ");
+  M5.lcd.print(" RPM: ");
+  Serial.println(Mleft_Speed_Value);
+  M5.lcd.println(Mleft_Speed_Value);
 
-    Serial.print("DIPSW: ");
-  M5.lcd.print("DIPSW: ");
-  Serial.print(Mleft_DIPSW_Value);
-  M5.lcd.print(Mleft_DIPSW_Value);
+    Serial.print(" DIPSW: ");
+  M5.lcd.print(" DIPSW: ");
+  Serial.println(Mleft_DIPSW_Value);
+  M5.lcd.println(Mleft_DIPSW_Value);
 
-  
-    Serial.print("MAngle: ");
-  M5.lcd.print("MAngle: ");
-  Serial.print(Motor_Left_Ins.Motor_Angle_Value);
-  M5.lcd.print(Motor_Left_Ins.Motor_Angle_Value);
-
-     Serial.print("MAnglePS: ");
-  M5.lcd.print("MAnglePS: ");
-  Serial.print(Motor_Left_Ins.Angle_Per_step);
-  M5.lcd.print(Motor_Left_Ins.Angle_Per_step);
-
-  Serial.print("MStepsPRev: ");
-  M5.lcd.print("MStepsPRev: ");
+  Serial.print(" MStepsPRev: ");
+  M5.lcd.print(" MStepsPRev: ");
   Serial.println(Motor_Left_Ins.Steps_Per_rev);
   M5.lcd.println(Motor_Left_Ins.Steps_Per_rev);
 
-   Serial.print("MRPM SP: ");
-  M5.lcd.print("MRPM SP: ");
-  Serial.print(Motor_Left_Ins.RPM_SetPoint_Value);
-  M5.lcd.print(Motor_Left_Ins.RPM_SetPoint_Value);
+  
+    Serial.print(" MAngle: ");
+  M5.lcd.print(" MAngle: ");
+  Serial.println(Motor_Left_Ins.Motor_Angle_Value);
+  M5.lcd.println(Motor_Left_Ins.Motor_Angle_Value);
 
-  Serial.print("MRPM PV: ");
-  M5.lcd.print("MRPM PV: ");
-  Serial.print(Motor_Left_Ins.RPM_ProcessVariable_Value);
-  M5.lcd.print(Motor_Left_Ins.RPM_ProcessVariable_Value);
-
-  Serial.print("MRPM EV: ");
-  M5.lcd.print("MRPM EV: ");
-  Serial.print(Motor_Left_Ins.RPM_Error_Value);
-  M5.lcd.print(Motor_Left_Ins.RPM_Error_Value);
+     Serial.print(" MAnglePS: ");
+  M5.lcd.print(" MAnglePS: ");
+  Serial.println(Motor_Left_Ins.Angle_Per_step);
+  M5.lcd.println(Motor_Left_Ins.Angle_Per_step);
 
 
-  Serial.print("MTPR: ");
-  M5.lcd.print("MTPR: ");
-  Serial.print(Motor_Left_Ins.Time_PerRotation_Value);
-  M5.lcd.print(Motor_Left_Ins.Time_PerRotation_Value);
+   Serial.print(" MRPM SP: ");
+  M5.lcd.print(" MRPM SP: ");
+  Serial.println(Motor_Left_Ins.RPM_SetPoint_Value);
+  M5.lcd.println(Motor_Left_Ins.RPM_SetPoint_Value);
+
+  Serial.print(" MRPM PV: ");
+  M5.lcd.print(" MRPM PV: ");
+  Serial.println(Motor_Left_Ins.RPM_ProcessVariable_Value);
+  M5.lcd.println(Motor_Left_Ins.RPM_ProcessVariable_Value);
+
+  Serial.print(" MRPM EV: ");
+  M5.lcd.print(" MRPM EV: ");
+  Serial.println(Motor_Left_Ins.RPM_Error_Value);
+  M5.lcd.println(Motor_Left_Ins.RPM_Error_Value);
+
+
+  Serial.print(" MTPR: ");
+  M5.lcd.print(" MTPR: ");
+  Serial.println(Motor_Left_Ins.Time_PerRotation_Value);
+  M5.lcd.println(Motor_Left_Ins.Time_PerRotation_Value);
 
   
-  Serial.print("MTPS: ");
-  M5.lcd.print("MTPS: ");
+  Serial.print(" MTPS: ");
+  M5.lcd.print(" MTPS: ");
   Serial.println(Motor_Left_Ins.Time_PerStep_Value);
   M5.lcd.println(Motor_Left_Ins.Time_PerStep_Value);
 
-    Serial.print("MFtreq: ");
-  M5.lcd.print("MFtreq: ");
+    Serial.print(" MFtreq: ");
+  M5.lcd.print(" MFtreq: ");
   Serial.println(Motor_Left_Ins.Frequency_Pulse_Value);
   M5.lcd.println(Motor_Left_Ins.Frequency_Pulse_Value);
 
-    Serial.print("MFtreqI2C: ");
-  M5.lcd.print("MFtreqI2C: ");
+    Serial.print(" MFtreqI2C: ");
+  M5.lcd.print(" MFtreqI2C: ");
   Serial.println(Motor_Left_Ins.Frequency_I2CBus_Value);
   M5.lcd.println(Motor_Left_Ins.Frequency_I2CBus_Value);
 
@@ -356,13 +386,105 @@ int Init() {
   Serial.println("Init: Motor Left Succeed");
   M5.lcd.println("Init: Motor Left Succeed");
 
+  //Initialize Motor Left
+  Serial.println("Init: Motor Right");
+  M5.lcd.println("Init: Motor Right");
+
+  Motor_Right_Ins.setupMotor(
+    Mright,
+    Mright_En_Pin,
+    Mright_Pull_Pin,
+    Mright_Dir_Pin,
+    Mright_Alarm_Pin,
+    Mright_Ped_Pin,
+    Mright_Speed_Value,
+    Mright_DIPSW_Value);
+
+  Serial.print(" Mright: ");
+  M5.lcd.print(" Mright: ");
+
+  Serial.print(" RPM: ");
+  M5.lcd.print(" RPM: ");
+  Serial.println(Mright_Speed_Value);
+  M5.lcd.println(Mright_Speed_Value);
+
+    Serial.print(" DIPSW: ");
+  M5.lcd.print(" DIPSW: ");
+  Serial.println(Mright_DIPSW_Value);
+  M5.lcd.println(Mright_DIPSW_Value);
+
+  Serial.print(" MStepsPRev: ");
+  M5.lcd.print(" MStepsPRev: ");
+  Serial.println(Motor_Right_Ins.Steps_Per_rev);
+  M5.lcd.println(Motor_Right_Ins.Steps_Per_rev);
+
+  
+    Serial.print(" MAngle: ");
+  M5.lcd.print(" MAngle: ");
+  Serial.println(Motor_Right_Ins.Motor_Angle_Value);
+  M5.lcd.println(Motor_Right_Ins.Motor_Angle_Value);
+
+     Serial.print(" MAnglePS: ");
+  M5.lcd.print(" MAnglePS: ");
+  Serial.println(Motor_Right_Ins.Angle_Per_step);
+  M5.lcd.println(Motor_Right_Ins.Angle_Per_step);
+
+
+   Serial.print(" MRPM SP: ");
+  M5.lcd.print(" MRPM SP: ");
+  Serial.println(Motor_Right_Ins.RPM_SetPoint_Value);
+  M5.lcd.println(Motor_Right_Ins.RPM_SetPoint_Value);
+
+  Serial.print(" MRPM PV: ");
+  M5.lcd.print(" MRPM PV: ");
+  Serial.println(Motor_Right_Ins.RPM_ProcessVariable_Value);
+  M5.lcd.println(Motor_Right_Ins.RPM_ProcessVariable_Value);
+
+  Serial.print(" MRPM EV: ");
+  M5.lcd.print(" MRPM EV: ");
+  Serial.println(Motor_Right_Ins.RPM_Error_Value);
+  M5.lcd.println(Motor_Right_Ins.RPM_Error_Value);
+
+
+  Serial.print(" MTPR: ");
+  M5.lcd.print(" MTPR: ");
+  Serial.println(Motor_Right_Ins.Time_PerRotation_Value);
+  M5.lcd.println(Motor_Right_Ins.Time_PerRotation_Value);
+
+  
+  Serial.print(" MTPS: ");
+  M5.lcd.print(" MTPS: ");
+  Serial.println(Motor_Right_Ins.Time_PerStep_Value);
+  M5.lcd.println(Motor_Right_Ins.Time_PerStep_Value);
+
+    Serial.print(" MFtreq: ");
+  M5.lcd.print(" MFtreq: ");
+  Serial.println(Motor_Right_Ins.Frequency_Pulse_Value);
+  M5.lcd.println(Motor_Right_Ins.Frequency_Pulse_Value);
+
+    Serial.print(" MFtreqI2C: ");
+  M5.lcd.print(" MFtreqI2C: ");
+  Serial.println(Motor_Right_Ins.Frequency_I2CBus_Value);
+  M5.lcd.println(Motor_Right_Ins.Frequency_I2CBus_Value);
+
+
+  Serial.println("Init: Motor Right Succeed");
+  M5.lcd.println("Init: Motor Right Succeed");
+
     return (7);
 }
 
-int Calibrate() {
+int Calibrate() { //State 7
   Serial.println("------ Calibration -------");
 
+if(Motor_Left_Ins.setOldAngelValue(180))  Serial.println("Motor Left Set Angle: Succeed");
+else{Serial.println("Motor Left Set Angle: Failed");
+return(5);}
 
+if(Motor_Right_Ins.setOldAngelValue(0))  Serial.println("Motor Right Set Angle: Succeed");
+else{Serial.println("Motor Right Set Angle: Failed");
+return(5);
+}
   Status = 1;
   return (1);
 }
@@ -421,9 +543,9 @@ void setup() {
   M5.lcd.println("-I2C: Turn on LED 15");
   GPIO_Ports_Instanz.digitalWrite(Clamp_Servo_Pin, LOW);
 
-  Serial.println("-I2C: wait 10s");
-  M5.lcd.println("-I2C: wait 10s");
-  delay(10000);
+  Serial.println("-I2C: wait 1s");
+  M5.lcd.println("-I2C: wait 1s");
+  delay(1000);
   Serial.println("-I2C: Turn off LED 15");
   M5.lcd.println("-I2C: Turn off LED 15");
   GPIO_Ports_Instanz.digitalWrite(Clamp_Servo_Pin, HIGH);
@@ -505,7 +627,7 @@ void setup() {
 
   Serial.println("!StartUp Complete!");
 
-  delay(5000);
+  delay(1000);
   M5.Lcd.fillScreen(BLACK);
   M5.Lcd.setCursor(0, 0);
 }
