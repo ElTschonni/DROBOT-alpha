@@ -31,7 +31,7 @@
 //=========| definiere Werte |==================================================*/
 #define ON HIGH
 #define OFF LOW
-#define baudRate 115200  //set baud rate for serial communiction
+#define baudRate 2000000  //set baud rate for serial communiction
 
 #define WLAN_SSID "Wildbachhuis 2.4"  // define: suchen und ersetzen im Code "L-TEKO"
 #define WLAN_PASSWD "Milkyway29!"     //"teko2016"
@@ -41,8 +41,8 @@
 #define Mright 1
 #define Mleft 0
 
-#define Mright_DIPSW_Value 0b1101  //initial Motor Speed in RPM
-#define Mleft_DIPSW_Value 0b1101  //initial Motor Speed in RPM
+#define Mright_DIPSW_Value 0b1110  //initial Motor Speed in RPM
+#define Mleft_DIPSW_Value 0b1110  //initial Motor Speed in RPM
 
 
 
@@ -268,14 +268,14 @@ old_Angle_value = Motor_Left_Ins.getOldAngelValue();
 new_Angle_value = Motor_Left_Ins.getNewAngelValue();
 
 
-while (Motor_Left_Ins.getNewAngelValue() != Motor_Left_Ins.getOldAngelValue()){
+while (!Motor_Left_Ins.Angle_Tollerance_Value){
 
-Serial.print("in the loop");
-  while(!Motor_Left_Ins.OneStepDir())  {  }
+//Serial.print(" loop ");
+
+  while(!Motor_Left_Ins.OneStepDir())  { }
 }
 
-  
-  delay(500);
+    delay(500);
 
   Start_StateMachine = false;
   Status = 1;
