@@ -55,8 +55,8 @@
 
   |--------------------------------------------------------------------------------|*/
 
-#ifndef Generator_h
-#define Generator_h
+
+#include "Generator.h"
 #include "Arduino.h"
 #include "M5Core2.h"
 
@@ -68,72 +68,43 @@
 //=========| Generating Object |==================================================
 //=========| Classes |==================================================
 //OOP Trigger Class
-class R_TRIG {
-private:
-  bool oldInput;
-  // Interface
-public:
-  // Eigenschaften
-  bool Output_positiv;
+
   // Methoden
-  void read(bool newInput) {
+void  Generator::read(bool newInput) {
     if (oldInput < newInput) {
       Output_positiv = true;
     } else {
       Output_positiv = false;
     }
     oldInput = newInput;
-  }
-};
+  };
 
 //=========| 2: F-Trigg Class:  Falling Trigger  |=============
 //OOP Trigger Class
-
-class F_TRIG {
-private:
-  bool oldInput;
-  // Interface
-public:
-  // Attributes
-  bool Output_positiv;
   // Methods
-  void read(bool newInput) {
+void Generator::read(bool newInput) {
     if (oldInput > newInput) {
       Output_positiv = true;
     } else {
       Output_positiv = false;
     }
     oldInput = newInput;
-  }
-};
+  };
+
 //=========| 3: T_FF Class: Toggle FlipFlop |=============
-class T_FF {
-private:
-  F_TRIG RT_Clk;  //Checking the raising Trigger of the clock signal
-public:
-  //Attributes
-  bool Q;  //Output Value
   //Methods
-  void toggle(bool Clk) {
+  void Generator::toggle(bool Clk) {
     RT_Clk.read(Clk);  //Check if there is a raising trigger
 
     if (RT_Clk.Output_positiv) {  //If there is a raising trigger, toggle Q
       Q = not Q;
     }
-  }
-};
+  };
 
 //=========| 4: TON Class:  Timer On  |=============
 
-class TON {
-private:
-  unsigned long StartTime;
-
-public:
-  //Attributes
-  bool Q;
-  //Methods
-  void Run(bool Input01) {
+ //Methods
+  void Generator::Run(bool Input01) {
     if (not Input01) {       // Timer gesperrt
       StartTime = millis();  // Timer resetten, d.h. immer auf aktueller Zeit halten
       Q = false;
@@ -141,21 +112,13 @@ public:
     if (StartTime + bouncingTime < millis()) {
       Q = Input01;
     }
-  }
-};
+  };
 
 
 //=========| 5: TOFF Class:  Timer OFF  |=============
 
-class TOFF {
-private:
-  unsigned long StartTime;
-
-public:
-  //Attributes
-  bool Q;
-  //Methods
-  void Run(bool Input01) {
+ //Methods
+  void Generator::Run(bool Input01) {
     if (Input01) {           // Timer gesperrt
       StartTime = millis();  // Timer resetten, d.h. immer auf aktueller Zeit halten
       Q = true;
@@ -163,24 +126,12 @@ public:
     if (StartTime + bouncingTime < millis()) {
       Q = Input01;
     }
-  }
-};
+  };
 
 //=========| 6: SignalG Class:  Signalgenerator  |=============
 
-class SignalG {
-private:
-  unsigned long lastMeasurment;
-  float Ts;  //sample Time
-  float T;   //Time
-  float Tp;  //Time of a Periode
-
-
-public:
-  //Attributes
-  bool square;
   //Methods
-  void run(float f) {  //f = frequency
+  void Generator::run(float f) {  //f = frequency
     Tp = 1 / f;
 
     Ts = (millis() - lastMeasurment) / 1000.0;
@@ -195,7 +146,4 @@ public:
     }
 
     //Sine Generator
-  }
-};
-
-#endif
+  };

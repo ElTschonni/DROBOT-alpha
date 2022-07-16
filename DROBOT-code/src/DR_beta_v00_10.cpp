@@ -19,7 +19,7 @@
 
   |---------------------------------------------------------------------------------|
   //=========| include librarys |==================================================*/
-#include "LibraryDROBOT.h"  // Robot controll
+#include "DROBOT.h"  // Robot controll
 #include "Wire.h"           // I2C
 #include "M5Core2.h"
 #include "WiFi.h"
@@ -75,8 +75,8 @@ const int STATUS_HREG = 5;  // Hreg 5 für den Zustand der StateMachine
 //ModbusIP object
 ModbusIP mb;
 WiFiMulti wiFiMulti;
-Adafruit_MCP23X17 I2C_Exp_Class;  //creating the MCP23017 Class
-Closed_Loop_Step_Motor Motor_Left_Class;//creating the Stepper Motor Class
+Adafruit_MCP23X17 GPIO_Ports_Instanz;  //creating the MCP23017 Class
+Closed_Loop_Step_Motor Motor_Left_Class(GPIO_Ports_Instanz);//creating the Stepper Motor Class
 
 //==============================================================================*/
 //=========| deklaration von Variabeln |========================================*/
@@ -164,7 +164,7 @@ int Standby()  //State1
   Serial.println(Befehl);
   Serial.print("- Start Statemachine: ");
   Serial.println(Start_StateMachine);
-  //I2C_Exp_Class.digitalWrite(Clamp_Servo_Pin, HIGH);
+  //GPIO_Ports_Instanz.digitalWrite(Clamp_Servo_Pin, HIGH);
 
 
 
@@ -275,7 +275,6 @@ int Calibrate() {
 void setup() {
   int error;
 
-Motor_Left_Class.begin();
 
   M5.begin();
 
@@ -291,7 +290,7 @@ Motor_Left_Class.begin();
   Serial.println("-Start: I2C");
   M5.lcd.println("-Start: I2C");
 
-  if (!I2C_Exp_Class.begin_I2C()) {
+  if (!GPIO_Ports_Instanz.begin_I2C()) {
     Serial.println("Error.I2C");
     M5.lcd.println("Error.I2C");
     while (1)
@@ -301,34 +300,34 @@ Motor_Left_Class.begin();
   Serial.println("-I2C_ Set Input/Output Pins");
   M5.lcd.println("-I2C_ Set Input/Output Pins ");
 
-  I2C_Exp_Class.pinMode(Mright_Pull_Pin, OUTPUT);           //	Pull+ Blue Motor Left
-  I2C_Exp_Class.pinMode(Mright_Dir_Pin, OUTPUT);            //	Dir+ White Motor Left
-  I2C_Exp_Class.pinMode(Mright_En_Pin, OUTPUT);             //	En + BrownBlack Motor Left&Right
-  I2C_Exp_Class.pinMode(Mright_Alarm_Pin, INPUT_PULLUP);    //	Alarm+ Whiteblack Motor Left
-  I2C_Exp_Class.pinMode(Mright_Ped_Pin, INPUT_PULLUP);      //	Ped+ GreenBlack Motor Left
-  I2C_Exp_Class.pinMode(Reed_Sensor_Pin, INPUT_PULLUP);     //	Reed / Push Sensor
-  I2C_Exp_Class.pinMode(Mvertical_Down_Pin, INPUT_PULLUP);  //	Vertical Down
-  I2C_Exp_Class.pinMode(Mvertical_Up_Pin, OUTPUT);          //	Vertical Up
-  I2C_Exp_Class.pinMode(Clamp_Servo_Pin, OUTPUT);           //	Clamp Orange Servo
-  I2C_Exp_Class.pinMode(End_Button2_Pin, OUTPUT);           //	End_Button 2 left
-  I2C_Exp_Class.pinMode(End_Button1_Pin, OUTPUT);           //	End_Button 1 right
-  I2C_Exp_Class.pinMode(Mleft_Ped_Pin, INPUT_PULLUP);       //	Ped+ GreenBlack Motor Left
-  I2C_Exp_Class.pinMode(Mleft_Alarm_Pin, INPUT_PULLUP);     //	Alarm+ Whiteblack Motor Left
-  I2C_Exp_Class.pinMode(Mleft_En_Pin, INPUT_PULLUP);        //	En + BrownBlack Motor Left&Right
-  I2C_Exp_Class.pinMode(Mleft_Dir_Pin, OUTPUT);             //	Dir+ White Motor Left
-  I2C_Exp_Class.pinMode(Mleft_Pull_Pin, OUTPUT);            //	Pull+ Blue Motor Left
+  GPIO_Ports_Instanz.pinMode(Mright_Pull_Pin, OUTPUT);           //	Pull+ Blue Motor Left
+  GPIO_Ports_Instanz.pinMode(Mright_Dir_Pin, OUTPUT);            //	Dir+ White Motor Left
+  GPIO_Ports_Instanz.pinMode(Mright_En_Pin, OUTPUT);             //	En + BrownBlack Motor Left&Right
+  GPIO_Ports_Instanz.pinMode(Mright_Alarm_Pin, INPUT_PULLUP);    //	Alarm+ Whiteblack Motor Left
+  GPIO_Ports_Instanz.pinMode(Mright_Ped_Pin, INPUT_PULLUP);      //	Ped+ GreenBlack Motor Left
+  GPIO_Ports_Instanz.pinMode(Reed_Sensor_Pin, INPUT_PULLUP);     //	Reed / Push Sensor
+  GPIO_Ports_Instanz.pinMode(Mvertical_Down_Pin, INPUT_PULLUP);  //	Vertical Down
+  GPIO_Ports_Instanz.pinMode(Mvertical_Up_Pin, OUTPUT);          //	Vertical Up
+  GPIO_Ports_Instanz.pinMode(Clamp_Servo_Pin, OUTPUT);           //	Clamp Orange Servo
+  GPIO_Ports_Instanz.pinMode(End_Button2_Pin, OUTPUT);           //	End_Button 2 left
+  GPIO_Ports_Instanz.pinMode(End_Button1_Pin, OUTPUT);           //	End_Button 1 right
+  GPIO_Ports_Instanz.pinMode(Mleft_Ped_Pin, INPUT_PULLUP);       //	Ped+ GreenBlack Motor Left
+  GPIO_Ports_Instanz.pinMode(Mleft_Alarm_Pin, INPUT_PULLUP);     //	Alarm+ Whiteblack Motor Left
+  GPIO_Ports_Instanz.pinMode(Mleft_En_Pin, INPUT_PULLUP);        //	En + BrownBlack Motor Left&Right
+  GPIO_Ports_Instanz.pinMode(Mleft_Dir_Pin, OUTPUT);             //	Dir+ White Motor Left
+  GPIO_Ports_Instanz.pinMode(Mleft_Pull_Pin, OUTPUT);            //	Pull+ Blue Motor Left
 
 
   Serial.println("-I2C: Turn on LED 15");
   M5.lcd.println("-I2C: Turn on LED 15");
-  I2C_Exp_Class.digitalWrite(Clamp_Servo_Pin, LOW);
+  GPIO_Ports_Instanz.digitalWrite(Clamp_Servo_Pin, LOW);
 
   Serial.println("-I2C: wait 10s");
   M5.lcd.println("-I2C: wait 10s");
   delay(10000);
   Serial.println("-I2C: Turn off LED 15");
   M5.lcd.println("-I2C: Turn off LED 15");
-  I2C_Exp_Class.digitalWrite(Clamp_Servo_Pin, HIGH);
+  GPIO_Ports_Instanz.digitalWrite(Clamp_Servo_Pin, HIGH);
 
 
 

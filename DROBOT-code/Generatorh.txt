@@ -76,14 +76,7 @@ public:
   // Eigenschaften
   bool Output_positiv;
   // Methoden
-  void read(bool newInput) {
-    if (oldInput < newInput) {
-      Output_positiv = true;
-    } else {
-      Output_positiv = false;
-    }
-    oldInput = newInput;
-  }
+  void read(bool newInput);
 };
 
 //=========| 2: F-Trigg Class:  Falling Trigger  |=============
@@ -97,14 +90,7 @@ public:
   // Attributes
   bool Output_positiv;
   // Methods
-  void read(bool newInput) {
-    if (oldInput > newInput) {
-      Output_positiv = true;
-    } else {
-      Output_positiv = false;
-    }
-    oldInput = newInput;
-  }
+  void read(bool newInput);
 };
 //=========| 3: T_FF Class: Toggle FlipFlop |=============
 class T_FF {
@@ -114,13 +100,7 @@ public:
   //Attributes
   bool Q;  //Output Value
   //Methods
-  void toggle(bool Clk) {
-    RT_Clk.read(Clk);  //Check if there is a raising trigger
-
-    if (RT_Clk.Output_positiv) {  //If there is a raising trigger, toggle Q
-      Q = not Q;
-    }
-  }
+  void toggle(bool Clk);
 };
 
 //=========| 4: TON Class:  Timer On  |=============
@@ -133,15 +113,7 @@ public:
   //Attributes
   bool Q;
   //Methods
-  void Run(bool Input01) {
-    if (not Input01) {       // Timer gesperrt
-      StartTime = millis();  // Timer resetten, d.h. immer auf aktueller Zeit halten
-      Q = false;
-    }
-    if (StartTime + bouncingTime < millis()) {
-      Q = Input01;
-    }
-  }
+  void Run(bool Input01);
 };
 
 
@@ -155,15 +127,7 @@ public:
   //Attributes
   bool Q;
   //Methods
-  void Run(bool Input01) {
-    if (Input01) {           // Timer gesperrt
-      StartTime = millis();  // Timer resetten, d.h. immer auf aktueller Zeit halten
-      Q = true;
-    }
-    if (StartTime + bouncingTime < millis()) {
-      Q = Input01;
-    }
-  }
+  void Run(bool Input01);
 };
 
 //=========| 6: SignalG Class:  Signalgenerator  |=============
@@ -180,22 +144,7 @@ public:
   //Attributes
   bool square;
   //Methods
-  void run(float f) {  //f = frequency
-    Tp = 1 / f;
-
-    Ts = (millis() - lastMeasurment) / 1000.0;
-    lastMeasurment = millis();
-    T = T + Ts;
-    if (T >= Tp) T = 0;
-
-    //Square Generator
-    if (T / Tp < 0.5) square = false;
-    else {
-      square = true;
-    }
-
-    //Sine Generator
-  }
+  void run(float f);
 };
 
 #endif

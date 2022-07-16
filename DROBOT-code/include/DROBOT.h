@@ -34,10 +34,10 @@
 #define Motor_Position_left 0
 
 
-
 //=========| Instancing Classes: |==================================================
 //=========| Generating Object |==================================================
 //=========| Classes |==================================================
+//Constructor:
 
 //=========| 8: CLSM Class: Closed_Loop_Step_Motor  |=============
 class Closed_Loop_Step_Motor  //CLSM
@@ -53,7 +53,7 @@ private:
   int Motor_Alarm_Pin;   //Alarm Pin
   int Motor_Ped_Pin;     // Confirmation bit for reaching the new stepp
 
-  Adafruit_MCP23X17 I2C_Exp_Class2;
+  //Adafruit_MCP23X17 GPIO_Ports_Instanz;
 
 
 
@@ -126,18 +126,14 @@ public:
 
   int errorcode = 0;
 
-  void begin(){
+
+Closed_Loop_Step_Motor(Adafruit_MCP23X17 GPIO_Ports_Instanz){
+
+    GPIO_Ports_Instanz.begin_I2C();
+}
     
-    if (!I2C_Exp_Class2.begin_I2C()) {
-      Serial.println("Error.I2C2");
-      M5.lcd.println("Error.I2C2");
-      while (1)
-        ;
-    }
-    I2C_Exp_Class2.pinMode(0, OUTPUT);
+   
 
-
-   }
 
   //Methods
   //Method to configure the Motor Object. - Hardware Pin Mapping and DipSwitch Position
@@ -167,7 +163,7 @@ public:
     Serial.println("MotorClassTest: Turn on LED 15");
     M5.lcd.println("MotorClassTest: Turn on LED 15");
 
-    I2C_Exp_Class2.digitalWrite(0, LOW);
+    GPIO_Ports_Instanz.digitalWrite(0, LOW);
   }
 
   void enableMotor() {
@@ -182,7 +178,7 @@ public:
   }
 
   bool startSurvilance() {
-    I2C_Exp_Class2.begin_I2C();
+    GPIO_Ports_Instanz.begin_I2C();
     if (!digitalRead(Motor_Alarm_Pin)) {
       Motor_Enable_Value = false;
       Serial.println("ALARM");
@@ -192,7 +188,7 @@ public:
     } else {
       return (1);
     };
-    I2C_Exp_Class2.digitalWrite(Motor_Enable_Pin, Motor_Enable_Value);
+    GPIO_Ports_Instanz.digitalWrite(Motor_Enable_Pin, Motor_Enable_Value);
   }
 
 
@@ -261,12 +257,12 @@ public:
   //MotorMovement Methodes
   bool moveOneStep(bool direction) {
     long int counter;
-    I2C_Exp_Class2.begin_I2C();
-    I2C_Exp_Class2.digitalWrite(Motor_Dir_Pin, direction);  //set direction 1= right 0 =left
+    GPIO_Ports_Instanz.begin_I2C();
+    GPIO_Ports_Instanz.digitalWrite(Motor_Dir_Pin, direction);  //set direction 1= right 0 =left
     delayMicroseconds(5);
-    I2C_Exp_Class2.digitalWrite(Motor_Pull_Pin, 1);  //send one Pulse
+    GPIO_Ports_Instanz.digitalWrite(Motor_Pull_Pin, 1);  //send one Pulse
     delayMicroseconds(5);
-    I2C_Exp_Class2.digitalWrite(Motor_Pull_Pin, 0);                             // maybe needs to be an Interupt
+    GPIO_Ports_Instanz.digitalWrite(Motor_Pull_Pin, 0);                             // maybe needs to be an Interupt
     while (digitalRead(!Motor_Ped_Pin) and (counter < 100000)) { counter++; };  //wait until position has been reached
     if (counter > 10000) {
       Serial.println("Warning: Step took too much time");  //Warning it took more than 10000 tries
