@@ -20,7 +20,7 @@
   |---------------------------------------------------------------------------------|
   //=========| include librarys |==================================================*/
 #include "DROBOT.h"  // Robot controll
-#include "Wire.h"           // I2C
+#include "Wire.h"    // I2C
 #include "M5Core2.h"
 #include "WiFi.h"
 #include "ModbusIP_ESP8266.h"
@@ -37,6 +37,17 @@
 #define WLAN_PASSWD "Milkyway29!"     //"teko2016"
 #define MCP23017_ADDR 0x20            //I2C Addrese
 #define I2C_Clock_Speed 1700000       // 1.7 MHz
+
+#define Mright 1
+#define Mleft 0
+
+#define Mright_Speed_Value 1  //initial Motor Speed in RPM
+#define Mleft_Speed_Value 1   //initial Motor Speed in RPM
+
+#define Mright_DIPSW_Value 0b1011  //initial Motor Speed in RPM
+#define Mleft_DIPSW_Value 0b1011  //initial Motor Speed in RPM
+
+
 
 
 //IOPorts //Adresses of Pins for Adafruit MCP23017
@@ -59,6 +70,8 @@
 
 
 
+
+
 //Sensors:
 
 //Set Constants for modbus
@@ -75,9 +88,9 @@ const int STATUS_HREG = 5;  // Hreg 5 für den Zustand der StateMachine
 //ModbusIP object
 ModbusIP mb;
 WiFiMulti wiFiMulti;
-Adafruit_MCP23X17 GPIO_Ports_Instanz;  //creating the MCP23017 Instance
-Closed_Loop_Step_Motor Motor_Left_Ins(&GPIO_Ports_Instanz);//creating the Left Motor Instance
-Closed_Loop_Step_Motor Motor_Right_Ins(&GPIO_Ports_Instanz);//creating the Right Motor Instance
+Adafruit_MCP23X17 GPIO_Ports_Instanz;                         //creating the MCP23017 Instance
+Closed_Loop_Step_Motor Motor_Left_Ins(&GPIO_Ports_Instanz);   //creating the Left Motor Instance
+Closed_Loop_Step_Motor Motor_Right_Ins(&GPIO_Ports_Instanz);  //creating the Right Motor Instance
 
 
 //==============================================================================*/
@@ -213,7 +226,6 @@ int Receive()  //Verarbeitung
       Status = 3;  // falscher Befehl
       return (4);
     }
-     
   }
 
 
@@ -228,7 +240,9 @@ int Draw() {  //State 3
   Serial.println("------ Draw -------");
   delay(500);
   Serial.print("Robot is Calculationg Coordinates ");
-  Motor_Left_Ins.test();//Motor Class Test
+  //MotorControll Motor Left
+
+  Motor_Left_Ins.test();  //Motor Class Test
   delay(500);
   Serial.print("Robot is Calculationg Route ");
   delay(500);
@@ -257,9 +271,92 @@ int Error() {
 
 int Init() {
   Serial.println("------ Initialize -------");
+  M5.lcd.println("------ Initialize -------");
+  //Initialize Motor Left
+  Serial.println("Init: Motor Left");
+  M5.lcd.println("Init: Motor Left");
+
+  Motor_Left_Ins.setupMotor(
+    Mleft,
+    Mleft_En_Pin,
+    Mleft_Pull_Pin,
+    Mleft_Dir_Pin,
+    Mleft_Alarm_Pin,
+    Mleft_Ped_Pin,
+    Mleft_Speed_Value,
+    Mleft_DIPSW_Value);
+
+  Serial.print("Mleft: ");
+  M5.lcd.print("Mleft: ");
+
+  Serial.print("RPM: ");
+  M5.lcd.print("RPM: ");
+  Serial.print(Mleft_Speed_Value);
+  M5.lcd.print(Mleft_Speed_Value);
+
+    Serial.print("DIPSW: ");
+  M5.lcd.print("DIPSW: ");
+  Serial.print(Mleft_DIPSW_Value);
+  M5.lcd.print(Mleft_DIPSW_Value);
+
+  
+    Serial.print("MAngle: ");
+  M5.lcd.print("MAngle: ");
+  Serial.print(Motor_Left_Ins.Motor_Angle_Value);
+  M5.lcd.print(Motor_Left_Ins.Motor_Angle_Value);
+
+     Serial.print("MAnglePS: ");
+  M5.lcd.print("MAnglePS: ");
+  Serial.print(Motor_Left_Ins.Angle_Per_step);
+  M5.lcd.print(Motor_Left_Ins.Angle_Per_step);
+
+  Serial.print("MStepsPRev: ");
+  M5.lcd.print("MStepsPRev: ");
+  Serial.println(Motor_Left_Ins.Steps_Per_rev);
+  M5.lcd.println(Motor_Left_Ins.Steps_Per_rev);
+
+   Serial.print("MRPM SP: ");
+  M5.lcd.print("MRPM SP: ");
+  Serial.print(Motor_Left_Ins.RPM_SetPoint_Value);
+  M5.lcd.print(Motor_Left_Ins.RPM_SetPoint_Value);
+
+  Serial.print("MRPM PV: ");
+  M5.lcd.print("MRPM PV: ");
+  Serial.print(Motor_Left_Ins.RPM_ProcessVariable_Value);
+  M5.lcd.print(Motor_Left_Ins.RPM_ProcessVariable_Value);
+
+  Serial.print("MRPM EV: ");
+  M5.lcd.print("MRPM EV: ");
+  Serial.print(Motor_Left_Ins.RPM_Error_Value);
+  M5.lcd.print(Motor_Left_Ins.RPM_Error_Value);
 
 
-  return (7);
+  Serial.print("MTPR: ");
+  M5.lcd.print("MTPR: ");
+  Serial.print(Motor_Left_Ins.Time_PerRotation_Value);
+  M5.lcd.print(Motor_Left_Ins.Time_PerRotation_Value);
+
+  
+  Serial.print("MTPS: ");
+  M5.lcd.print("MTPS: ");
+  Serial.println(Motor_Left_Ins.Time_PerStep_Value);
+  M5.lcd.println(Motor_Left_Ins.Time_PerStep_Value);
+
+    Serial.print("MFtreq: ");
+  M5.lcd.print("MFtreq: ");
+  Serial.println(Motor_Left_Ins.Frequency_Pulse_Value);
+  M5.lcd.println(Motor_Left_Ins.Frequency_Pulse_Value);
+
+    Serial.print("MFtreqI2C: ");
+  M5.lcd.print("MFtreqI2C: ");
+  Serial.println(Motor_Left_Ins.Frequency_I2CBus_Value);
+  M5.lcd.println(Motor_Left_Ins.Frequency_I2CBus_Value);
+
+
+  Serial.println("Init: Motor Left Succeed");
+  M5.lcd.println("Init: Motor Left Succeed");
+
+    return (7);
 }
 
 int Calibrate() {
@@ -405,6 +502,7 @@ void setup() {
 
 
 
+
   Serial.println("!StartUp Complete!");
 
   delay(5000);
@@ -414,19 +512,18 @@ void setup() {
 
 //=========| Hauptprogramm    |=================================================*/
 void loop() {
-int cycleCounter =0;
+  int cycleCounter = 0;
   int state = 1;
 
   while (1) {
     state = programSelector;
     M5.update();
-    if(cycleCounter>15)  {   
-       M5.Lcd.fillScreen(BLACK); 
-       M5.Lcd.setCursor(0, 0);
-       cycleCounter=0;
-       
-       }
-cycleCounter++;
+    if (cycleCounter > 15) {
+      M5.Lcd.fillScreen(BLACK);
+      M5.Lcd.setCursor(0, 0);
+      cycleCounter = 0;
+    }
+    cycleCounter++;
 
     switch (state) {
       case 1: state = Standby(); break;  //Standby
