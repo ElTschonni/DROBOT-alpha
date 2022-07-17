@@ -252,7 +252,7 @@ double new_Angle_value = 0;
    // delay(500);
   Serial.println("Robot is Calculationg Route ");
 
- if(Motor_Left_Ins.setNewAngelValue(90))  Serial.println("Motor Left Set Angle: Succeed");
+ if(Motor_Left_Ins.setNewAngelValue(random(0,360)))  Serial.println("Motor Left Set Angle: Succeed");
 else{Serial.println("Motor Left Set Angle: Failed");
 return(5);}
 

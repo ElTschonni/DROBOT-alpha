@@ -57,7 +57,7 @@ private:
   Adafruit_MCP23X17 *GPIO_I2C_Exp;
 
 
-
+long int delayNumber =0;
 
   //Motor Pin Values
   bool Motor_Enable_Value = false;
@@ -161,36 +161,24 @@ public:
   }
 
   void test() {
-    Serial.println("MotorClassTest: Turn on LED 15");
-    M5.lcd.println("MotorClassTest: Turn on LED 15");
+    Serial.print("MotorClassTest: ");
+    M5.lcd.print("MotorClassTest: ");
 
     GPIO_I2C_Exp->digitalWrite(0, LOW);
-
-
-    GPIO_I2C_Exp->digitalWrite(0, HIGH);
-
-
+  /*
+   GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 1);
     GPIO_I2C_Exp->digitalWrite(Motor_Dir_Pin, 1);  //set direction 1= right 0 =left
-    delayMicroseconds(5);
-    GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 1);  //send one Pulse
-  delayMicroseconds(5);
+    delayMicroseconds(1);
+
+    GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 0);  //send one Pulse
+    GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 1);
+      delayMicroseconds(5);
     GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 0);
+     */  
+        GPIO_I2C_Exp->digitalWrite(0, HIGH);
     
-  //enableMotor();
-
-
-      GPIO_I2C_Exp->digitalWrite(0, LOW);
-   // enableMotor();
-    //startSurvilance();
-    GPIO_I2C_Exp->digitalWrite(0, HIGH);
-
-    GPIO_I2C_Exp->digitalWrite(Motor_Dir_Pin, 1);  //set direction 1= right 0 =left
- delay(1);
-    GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 1);  //send one Pulse
- delay(1);
-    GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 0);
-    
- disableMotor();
+  
+ //disableMotor();
 
 
   }
