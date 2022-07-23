@@ -9,10 +9,9 @@
   |MechanicalTeam: Lorenz, Alain, 
   |Datum:         29.06.2022                                                        |
   |Hardware:      M5Stack Core2 (Mikrocontroller: ESP32)                         |
-  |Software:      Arduino IDE 1.8.19 (www.arduino.cc)                               |
+  |Software:      PlatformIO C++  VSCode (www.arduino.cc)                              |
   |Beschreibung:  DROBOT Library
   |---------------------------------------------------------------------------------|
-  |Beschreibung:  WetterLibrary                                                      |
   |---------------------------------------------------------------------------------|
 
     |--------------------------------------------------------------------------------|*/
@@ -37,9 +36,12 @@
 //=========| Instancing Classes: |==================================================
 //=========| Generating Object |==================================================
 //=========| Classes |==================================================
+//1: CLSM Class: Closed_Loop_Step_Motor
+//2: MMC: Motor_Movement_Calc
+
 //Constructor:
 
-//=========| 8: CLSM Class: Closed_Loop_Step_Motor  |=============
+//=========| 1: CLSM Class: Closed_Loop_Step_Motor  |=============
 class Closed_Loop_Step_Motor  //CLSM
 {
 private:
@@ -57,7 +59,7 @@ private:
   Adafruit_MCP23X17 *GPIO_I2C_Exp;
 
 
-long int delayNumber =0;
+  long int delayNumber = 0;
 
   //Motor Pin Values
   bool Motor_Enable_Value = false;
@@ -165,7 +167,7 @@ public:
     M5.lcd.print("MotorClassTest: ");
 
     GPIO_I2C_Exp->digitalWrite(0, LOW);
-  /*
+    /*
    GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 1);
     GPIO_I2C_Exp->digitalWrite(Motor_Dir_Pin, 1);  //set direction 1= right 0 =left
     delayMicroseconds(1);
@@ -174,40 +176,38 @@ public:
     GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 1);
       delayMicroseconds(5);
     GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 0);
-     */  
-        GPIO_I2C_Exp->digitalWrite(0, HIGH);
-    
-  
- //disableMotor();
+     */
+    GPIO_I2C_Exp->digitalWrite(0, HIGH);
 
 
+    //disableMotor();
   }
 
   void enableMotor() {
-    Motor_Enable_Value = HIGH;
+    Motor_Enable_Value = LOW;
     Serial.println(" MotorEnabled ");
     M5.lcd.println(" MotorEnabled ");
     GPIO_I2C_Exp->digitalWrite(Motor_Enable_Pin, Motor_Enable_Value);
   }
   void disableMotor() {
-    Motor_Enable_Value = LOW;
+    Motor_Enable_Value = HIGH;
     Serial.println(" MotorDisabled ");
     M5.lcd.println(" MotorDisabled ");
     GPIO_I2C_Exp->digitalWrite(Motor_Enable_Pin, Motor_Enable_Value);
   }
 
   bool startSurvilance() {
-    //  GPIO_I2C_Exp->begin_I2C();
-    if (!(GPIO_I2C_Exp->digitalRead(Motor_Alarm_Pin))) {
-      Motor_Enable_Value = false;
+    //  If motor Alarm Pin is high -> alarm
+    Motor_Alarm_Value =GPIO_I2C_Exp->digitalRead(Motor_Alarm_Pin);
+    
+    if (Motor_Alarm_Value == true) {
       Serial.println("ALARM");
       M5.lcd.println("ALARM");
       errorcode = 1;
       return (0);
     } else {
       return (1);
-    };
-    GPIO_I2C_Exp->digitalWrite(Motor_Enable_Pin, Motor_Enable_Value);
+    }
   }
 
 
@@ -277,33 +277,44 @@ public:
 
   //MotorMovement Methodes
   bool moveOneStep(bool direction) {
-    long int counter =0;
-    //GPIO_I2C_Exp.begin_I2C();
-    GPIO_I2C_Exp->digitalWrite(Motor_Dir_Pin, direction);  //set direction 1= right 0 =left
-    delayMicroseconds(5);
-    GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 1);  //send one Pulse
-    delayMicroseconds(5);
-    GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 0);
+    long int counter = 0;
 
-    // maybe needs to be an Interupt
-   /*while (!(GPIO_I2C_Exp->digitalRead(Motor_Ped_Pin)) and (counter < 100000)) { counter++; };  //wait until position has been reached
-    
-    if (counter > 10000) {
-      Serial.print(" Warning: No PED Response: ");  //Warning it took more than 10000 tries
-      M5.lcd.print(" Warning: No PED Response ");
-      Serial.print(counter);
-      Serial.print("Motor_Ped_Pin");
-      Serial.print(GPIO_I2C_Exp->digitalRead(Motor_Ped_Pin));
-      
-    }*/
-    return (1);  //it was successfull
-/*
+    if (startSurvilance()) {
+      GPIO_I2C_Exp->digitalWrite(Motor_Dir_Pin, direction);  //set direction 1= right 0 =left
+      delayMicroseconds(5);
+      GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 1);  //send one Pulse
+      delayMicroseconds(5);
+      GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 0);
+
+      // maybe needs to be an Interupt
+      do {
+        Motor_Ped_Value = GPIO_I2C_Exp->digitalRead(Motor_Ped_Pin);
+           counter++;
+                  Serial.print(" Motor_Ped_Pin: ");
+        Serial.print(GPIO_I2C_Exp->digitalRead(Motor_Ped_Pin));
+         Serial.print(" counter: ");
+           Serial.print(counter);
+      } while (((Motor_Ped_Value == false)) and (counter < 100000));  //wait until position has been reached
+
+      if (counter > 10000) {
+        Serial.print(" Warning: Slow PED Response: ");  //Warning it took more than 10000 tries
+        M5.lcd.print(" Warning: Slow PED Response ");
+        Serial.print(counter);
+        Serial.print("Motor_Ped_Pin: ");
+        Serial.print(GPIO_I2C_Exp->digitalRead(Motor_Ped_Pin));
+      }
+          return (1);  //it was successfull
+    }
+else{ return (0); }
+
+
+
     if (counter > 90000) {
       return (0);  //error - try again
       Serial.print(" Error: Step failed");
       M5.lcd.print(" Error: Step failed");
       errorcode = 4;
-    }*/
+    }
   }
 
   bool OneStepDir(/*bool direction*/) {
@@ -324,30 +335,24 @@ public:
     Min_AngleDev_value = New_Angle_Value - Angle_Per_step * 1.05;
 
     //enableMotor();
-   // survilance = startSurvilance();
+    // survilance = startSurvilance();
 
     if (survilance) {
-        Serial.print(" New_Angle_Value: ");
-        Serial.print(New_Angle_Value);
-        Serial.print(" Old_Angle_Value: ");
-        Serial.print(Old_Angle_Value);
+      Serial.print(" New_Angle_Value: ");
+      Serial.print(New_Angle_Value);
+      Serial.print(" Old_Angle_Value: ");
+      Serial.print(Old_Angle_Value);
 
-        M5.lcd.print(" New_Angle_Value: ");
-        M5.lcd.print(New_Angle_Value);
-        M5.lcd.print(" Old_Angle_Value: ");
-        M5.lcd.println(Old_Angle_Value);
+      M5.lcd.print(" New_Angle_Value: ");
+      M5.lcd.print(New_Angle_Value);
+      M5.lcd.print(" Old_Angle_Value: ");
+      M5.lcd.print(Old_Angle_Value);
 
       //aslong as the old angle is out of new angle tollerance
       if (Old_Angle_Value < Min_AngleDev_value) {
         Angle_Tollerance_Value = 0;
-        
-       /* Serial.print(" New_V is  bigger: ");
-        Serial.print("dir  cw");
 
-        M5.lcd.print(" New_V is  bigger: ");
-        M5.lcd.print("dir  cw");*/
-
-        while ((I_did_one_Step == 0) and (counter < 100000) and startSurvilance()) {  // try as until you did one Stepbut try not more than 100000 times.
+                while ((I_did_one_Step == 0) and (counter < 100000) and startSurvilance()) {  // try as until you did one Stepbut try not more than 100000 times.
           I_did_one_Step = moveOneStep(Motor_Turn_left);
 
 
@@ -360,14 +365,9 @@ public:
       } else if (Old_Angle_Value > Max_AngleDev_value)  //if the new Angle is smaller than the old turn the motor left to make the difference smaller.
       {
         Angle_Tollerance_Value = 0;
-        /*Serial.print(" New_V is smaller: ");
-        Serial.print("dir ccw");
-
-        M5.lcd.print(" New_V is smaller: ");
-        M5.lcd.print("dir ccw");*/
-
+       
         while ((I_did_one_Step == 0) and (counter < 100000) and survilance) {  // try as until you did one Stepbut try not more than 100000 times.
-        //  survilance = startSurvilance();
+                                                                               //  survilance = startSurvilance();
           I_did_one_Step = moveOneStep(Motor_Turn_right);
           counter++;
         };
@@ -381,22 +381,20 @@ public:
         Serial.print(" InTollerance ");
         M5.lcd.print(" InTollerance ");
       }
-        
+
 
 
       while (us_timer_state and survilance) {  //wait if time per step is to short
         survilance = startSurvilance();
 
-
-
         if ((us_timer_value) < (micros() - us_timer_start)) {
           us_timer_state = 0;
 
-          
-          Serial.print(" us_timer_value: "); 
-        Serial.print(us_timer_value);
-           Serial.print(" < micros: ");
-          Serial.print(micros()- us_timer_start);
+
+          Serial.print(" us_timer_value: ");
+          Serial.print(us_timer_value);
+          Serial.print(" < micros: ");
+          Serial.print(micros() - us_timer_start);
 
 
           Step_Time_Value = (micros() - us_timer_start) / 1000;
@@ -404,24 +402,21 @@ public:
           Serial.println(Step_Time_Value);
 
           M5.lcd.print(" StepTime: ");
-          M5.lcd.print(Step_Time_Value);
+          M5.lcd.println(Step_Time_Value);
+       
 
           if ((Step_Time_Value) >= (us_timer_value / 990)) errorcode = 5;
 
-          
-         us_timer_state = 0;
-       // disableMotor();
-        return (1);
+          us_timer_state = 0;
+          // disableMotor();
+          return (1);
+         
         }
-
-
-          }
-
-
-       
-        
-     
+      }
     }
+    else {return (1);}
+    Serial.println();
+    M5.lcd.println();
   }
 };
 
