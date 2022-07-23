@@ -41,8 +41,8 @@
 #define Mright 1
 #define Mleft 0
 
-#define Mright_DIPSW_Value 0b1110  //initial Motor Speed in RPM
-#define Mleft_DIPSW_Value 0b1110   //initial Motor Speed in RPM
+#define Mright_DIPSW_Value 0b0010  //initial Motor Speed in RPM
+#define Mleft_DIPSW_Value 0b0010   //initial Motor Speed in RPM
 
 
 
@@ -269,12 +269,12 @@ int Draw() {  //State 3
   Serial.print("New Angle: ");
   Serial.println(Motor_Left_Ins.getNewAngelValue());
 
-  Serial.print("Still out of Tollerance: ");
+  Serial.print("Tollerance: ");
   Serial.println(Motor_Left_Ins.Angle_Tollerance_Value);
 //move from old angle to new angle
   do {
-    Serial.print(" Number of Steps: ");
-    Serial.print(counterTollerance++);
+ //   Serial.print(" Number of Steps: ");
+ //   Serial.print(counterTollerance++);
   
 do{//do one step
   if(Motor_Left_Ins.OneStepDir()==0)exitStep = false;
@@ -669,6 +669,8 @@ void loop() {
       cycleCounter = 0;
     }
     cycleCounter++;
+ Serial.print(" state: ");
+  Serial.println(state);
 
     switch (state) {
       case 1: state = Standby(); break;  //Standby

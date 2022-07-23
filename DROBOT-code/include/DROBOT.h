@@ -198,8 +198,8 @@ public:
 
   bool startSurvilance() {
     //  If motor Alarm Pin is high -> alarm
-    Motor_Alarm_Value =GPIO_I2C_Exp->digitalRead(Motor_Alarm_Pin);
-    
+    Motor_Alarm_Value = GPIO_I2C_Exp->digitalRead(Motor_Alarm_Pin);
+
     if (Motor_Alarm_Value == true) {
       Serial.println("ALARM");
       M5.lcd.println("ALARM");
@@ -289,11 +289,11 @@ public:
       // maybe needs to be an Interupt
       do {
         Motor_Ped_Value = GPIO_I2C_Exp->digitalRead(Motor_Ped_Pin);
-           counter++;
-                  Serial.print(" Motor_Ped_Pin: ");
-        Serial.print(GPIO_I2C_Exp->digitalRead(Motor_Ped_Pin));
-         Serial.print(" counter: ");
-           Serial.print(counter);
+        counter++;
+        //               Serial.print(" Motor_Ped_Pin: ");
+        //    Serial.print(GPIO_I2C_Exp->digitalRead(Motor_Ped_Pin));
+        //     Serial.print(" counter: ");
+        //       Serial.print(counter);
       } while (((Motor_Ped_Value == false)) and (counter < 100000));  //wait until position has been reached
 
       if (counter > 10000) {
@@ -303,9 +303,10 @@ public:
         Serial.print("Motor_Ped_Pin: ");
         Serial.print(GPIO_I2C_Exp->digitalRead(Motor_Ped_Pin));
       }
-          return (1);  //it was successfull
+      return (1);  //it was successfull
+    } else {
+      return (0);
     }
-else{ return (0); }
 
 
 
@@ -338,7 +339,7 @@ else{ return (0); }
     // survilance = startSurvilance();
 
     if (survilance) {
-      Serial.print(" New_Angle_Value: ");
+      /*  Serial.print(" New_Angle_Value: ");
       Serial.print(New_Angle_Value);
       Serial.print(" Old_Angle_Value: ");
       Serial.print(Old_Angle_Value);
@@ -346,13 +347,13 @@ else{ return (0); }
       M5.lcd.print(" New_Angle_Value: ");
       M5.lcd.print(New_Angle_Value);
       M5.lcd.print(" Old_Angle_Value: ");
-      M5.lcd.print(Old_Angle_Value);
+      M5.lcd.print(Old_Angle_Value);*/
 
       //aslong as the old angle is out of new angle tollerance
       if (Old_Angle_Value < Min_AngleDev_value) {
         Angle_Tollerance_Value = 0;
 
-                while ((I_did_one_Step == 0) and (counter < 100000) and startSurvilance()) {  // try as until you did one Stepbut try not more than 100000 times.
+        while ((I_did_one_Step == 0) and (counter < 100000) and startSurvilance()) {  // try as until you did one Stepbut try not more than 100000 times.
           I_did_one_Step = moveOneStep(Motor_Turn_left);
 
 
@@ -365,7 +366,7 @@ else{ return (0); }
       } else if (Old_Angle_Value > Max_AngleDev_value)  //if the new Angle is smaller than the old turn the motor left to make the difference smaller.
       {
         Angle_Tollerance_Value = 0;
-       
+
         while ((I_did_one_Step == 0) and (counter < 100000) and survilance) {  // try as until you did one Stepbut try not more than 100000 times.
                                                                                //  survilance = startSurvilance();
           I_did_one_Step = moveOneStep(Motor_Turn_right);
@@ -391,32 +392,170 @@ else{ return (0); }
           us_timer_state = 0;
 
 
-          Serial.print(" us_timer_value: ");
-          Serial.print(us_timer_value);
-          Serial.print(" < micros: ");
-          Serial.print(micros() - us_timer_start);
+          // Serial.print(" us_timer_value: ");
+          //      Serial.print(us_timer_value);
+          //      Serial.print(" < ");
+          //   Serial.println(micros() - us_timer_start);
 
 
           Step_Time_Value = (micros() - us_timer_start) / 1000;
-          Serial.print(" StepTime: ");
+          /*        Serial.print(" StepTime: ");
           Serial.println(Step_Time_Value);
 
           M5.lcd.print(" StepTime: ");
           M5.lcd.println(Step_Time_Value);
        
-
+*/
           if ((Step_Time_Value) >= (us_timer_value / 990)) errorcode = 5;
 
           us_timer_state = 0;
           // disableMotor();
           return (1);
-         
         }
       }
+    } else {
+      return (1);
     }
-    else {return (1);}
-    Serial.println();
-    M5.lcd.println();
+    //   Serial.println();
+    //   M5.lcd.println();
+  }
+};
+
+class Motor_Movement_Calc {
+private:
+  double Steps_Per_Rev = 0;
+  double Angle_Per_Step = 0;
+
+
+public:
+  unsigned long TotalNof_Steps_Value = 0;
+  unsigned long Done_Steps_Value = 0;
+  unsigned long Missing_Steps_Value = 0;
+
+  double Min_Resolution_Value = 0;
+  double Time_PerStep_Value = 0;
+  double Max_Work_Time = 0;
+  unsigned int X1_Origin_Value = 0;
+  unsigned int Y1_Origin_Value = 0;
+
+  unsigned int X2_Target_Value = 0;
+  unsigned int Y2_Target_Value = 0;
+
+  unsigned int Xz_NextStep_Value = 0;
+  unsigned int Yz_NextStep_Value = 0;
+
+  double Length_ofWay_Value = 0;      // The distance between Point A and B
+  double Length_BaseToTip_Value = 0;  // The distance from the axis of the arm to the tip of the pen
+
+  void setupInterpolate(double StPerRot, double AngPerStp, double LArm) {  //Set all nessesary Variables
+    double MinR_Value = 0;
+
+    Steps_Per_Rev = StPerRot;
+    Angle_Per_Step = AngPerStp;
+    Length_BaseToTip_Value = LArm;
+
+    Serial.print(" Steps_Per_Rev: ");
+    Serial.print(Steps_Per_Rev);
+    Serial.print(" Angle_Per_Step: ");
+    Serial.print(Angle_Per_Step);
+    Serial.print(" Length_BaseToTip_Value ");
+    Serial.print(Length_BaseToTip_Value);
+    MinR_Value = (Length_BaseToTip_Value * Length_BaseToTip_Value + Length_BaseToTip_Value * Length_BaseToTip_Value - 2 * Length_BaseToTip_Value * Length_BaseToTip_Value * cos(Angle_Per_Step));
+    if (MinR_Value <= 0) MinR_Value *(-1);//Make sure value is not <0
+    Min_Resolution_Value = sqrt(MinR_Value);
+
+    Serial.print(" Min_Resolution_Value: ");
+    Serial.println(Min_Resolution_Value);
+  }
+
+  void setOriginCoordinates(unsigned long X1, unsigned long Y1) {
+    X1_Origin_Value = X1;
+    Y1_Origin_Value = Y1;
+    Serial.print(" X1_Origin_Value ");
+    Serial.print(X1_Origin_Value);
+    Serial.print(" Y1_Origin_Value ");
+    Serial.println(Y1_Origin_Value);
+  }
+
+  void setTargetCoordinates(unsigned long X2, unsigned long Y2) {
+    X2_Target_Value = X2;
+    Y2_Target_Value = Y2;
+
+    Serial.print(" X2_Target_Value ");
+    Serial.print(X2_Target_Value);
+    Serial.print(" Y2_Target_Value ");
+    Serial.println(Y2_Target_Value);
+  }
+
+  void setMaxTime(double Tmax) {
+    Max_Work_Time = Tmax;
+    Time_PerStep_Value = Time_PerStep_Value / Steps_Per_Rev;
+
+    Serial.print(" Max_Work_Time ");
+    Serial.print(Max_Work_Time);
+    Serial.print(" Time_PerStep_Value ");
+    Serial.println(Time_PerStep_Value);
+  }
+ void Interpolate() {
+    double LoW_Value = 0;
+    double Q_Value = 0;
+   
+
+    if (Done_Steps_Value == 0) { // Calculations once per Interpolate session
+      LoW_Value = (Y2_Target_Value - Y1_Origin_Value) * (Y2_Target_Value - Y1_Origin_Value);
+      if (LoW_Value <= 0) LoW_Value *(-1); //Make sure value is not <0
+      Length_ofWay_Value = sqrt(LoW_Value);
+
+      TotalNof_Steps_Value = Min_Resolution_Value / Length_ofWay_Value;
+
+      Serial.print(" Length_ofWay_Value ");
+      Serial.print(Length_ofWay_Value);
+      Serial.print(" TotalNof_Steps_Value ");
+      Serial.println(TotalNof_Steps_Value);
+
+    } else if (Done_Steps_Value <= TotalNof_Steps_Value) {
+      //calculate Q Value
+      Q_Value = Done_Steps_Value /TotalNof_Steps_Value;
+
+Xz_NextStep_Value = ((1-Q_Value)*X1_Origin_Value)+(Q_Value*X2_Target_Value);
+Yz_NextStep_Value = ((1-Q_Value)*Y1_Origin_Value)+(Q_Value*Y2_Target_Value);
+
+    Serial.print(" Xz_NextStep_Value ");
+      Serial.print(Xz_NextStep_Value);
+      Serial.print(" Yz_NextStep_Value ");
+      Serial.println(Yz_NextStep_Value);
+      Done_Steps_Value++;
+      
+
+    }
+    else if(Done_Steps_Value >= TotalNof_Steps_Value) {
+
+      Serial.print(" Xz_NextStep_Value: ");
+      Serial.print(Xz_NextStep_Value);
+      Serial.print(" Yz_NextStep_Value ");
+      Serial.println(Yz_NextStep_Value);
+      Serial.print(" X2_Target_Value  : ");
+      Serial.print(X2_Target_Value);
+      Serial.print(" Y2_Target_Value  : ");
+      Serial.println(Y2_Target_Value);
+
+      Y1_Origin_Value = Yz_NextStep_Value;
+      X1_Origin_Value = Xz_NextStep_Value;
+
+      Serial.print(" X1_Origin_Value  : ");
+      Serial.print(X1_Origin_Value);
+      Serial.print(" Y1_Origin_Value  : ");
+      Serial.println(Y1_Origin_Value);
+
+      Done_Steps_Value= 0;
+      TotalNof_Steps_Value =0;
+      Length_ofWay_Value=0;
+      
+   Serial.println(" Finished Interpolate ");
+
+}
+else{    Serial.println(" Error Interpolate ");}
+
   }
 };
 
