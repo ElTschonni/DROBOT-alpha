@@ -32,6 +32,11 @@
 #define Motor_Position_right 1
 #define Motor_Position_left 0
 
+#define PI 3.1415926535897932384626433832795
+#define HALF_PI 1.5707963267948966192313216916398
+#define TWO_PI 6.283185307179586476925286766559
+#define DEG_TO_RAD 0.017453292519943295769236907684886
+#define RAD_TO_DEG 57.295779513082320876798154814105
 
 //=========| Instancing Classes: |==================================================
 //=========| Generating Object |==================================================
@@ -287,7 +292,7 @@ public:
       GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 0);
 
       // maybe needs to be an Interupt
-      do {
+    /*  do {
         Motor_Ped_Value = GPIO_I2C_Exp->digitalRead(Motor_Ped_Pin);
         counter++;
         //               Serial.print(" Motor_Ped_Pin: ");
@@ -302,7 +307,7 @@ public:
         Serial.print(counter);
         Serial.print("Motor_Ped_Pin: ");
         Serial.print(GPIO_I2C_Exp->digitalRead(Motor_Ped_Pin));
-      }
+      }*/
       return (1);  //it was successfull
     } else {
       return (0);
@@ -425,6 +430,7 @@ class Motor_Movement_Calc {
 private:
   double Steps_Per_Rev = 0;
   double Angle_Per_Step = 0;
+  double Angle_Per_StepB =0;
 
 
 public:
@@ -452,16 +458,18 @@ public:
 
     Steps_Per_Rev = StPerRot;
     Angle_Per_Step = AngPerStp;
+    Angle_Per_StepB = DEG_TO_RAD*Angle_Per_Step;
     Length_BaseToTip_Value = LArm;
 
-    Serial.print(" Steps_Per_Rev: ");
+    Serial.print(" sI: Steps_Per_Rev: ");
     Serial.print(Steps_Per_Rev);
     Serial.print(" Angle_Per_Step: ");
     Serial.print(Angle_Per_Step);
     Serial.print(" Length_BaseToTip_Value ");
     Serial.print(Length_BaseToTip_Value);
-    MinR_Value = (Length_BaseToTip_Value * Length_BaseToTip_Value + Length_BaseToTip_Value * Length_BaseToTip_Value - 2 * Length_BaseToTip_Value * Length_BaseToTip_Value * cos(Angle_Per_Step));
-    if (MinR_Value <= 0) MinR_Value *(-1);//Make sure value is not <0
+
+    MinR_Value = (Length_BaseToTip_Value * Length_BaseToTip_Value + Length_BaseToTip_Value * Length_BaseToTip_Value - 2 * Length_BaseToTip_Value * Length_BaseToTip_Value * cos(Angle_Per_StepB));
+    if (MinR_Value <= 0) MinR_Value *(-1);  //Make sure value is not <0
     Min_Resolution_Value = sqrt(MinR_Value);
 
     Serial.print(" Min_Resolution_Value: ");
@@ -471,7 +479,7 @@ public:
   void setOriginCoordinates(unsigned long X1, unsigned long Y1) {
     X1_Origin_Value = X1;
     Y1_Origin_Value = Y1;
-    Serial.print(" X1_Origin_Value ");
+    Serial.print(" sOC: X1_Origin_Value ");
     Serial.print(X1_Origin_Value);
     Serial.print(" Y1_Origin_Value ");
     Serial.println(Y1_Origin_Value);
@@ -481,7 +489,7 @@ public:
     X2_Target_Value = X2;
     Y2_Target_Value = Y2;
 
-    Serial.print(" X2_Target_Value ");
+    Serial.print(" sTC: X2_Target_Value ");
     Serial.print(X2_Target_Value);
     Serial.print(" Y2_Target_Value ");
     Serial.println(Y2_Target_Value);
@@ -489,74 +497,113 @@ public:
 
   void setMaxTime(double Tmax) {
     Max_Work_Time = Tmax;
-    Time_PerStep_Value = Time_PerStep_Value / Steps_Per_Rev;
+    Time_PerStep_Value = Max_Work_Time / Steps_Per_Rev;
 
-    Serial.print(" Max_Work_Time ");
+    Serial.print(" sMT: Max_Work_Time ");
     Serial.print(Max_Work_Time);
     Serial.print(" Time_PerStep_Value ");
     Serial.println(Time_PerStep_Value);
   }
- void Interpolate() {
-    double LoW_Value = 0;
-    double Q_Value = 0;
-   
 
-    if (Done_Steps_Value == 0) { // Calculations once per Interpolate session
-      LoW_Value = (Y2_Target_Value - Y1_Origin_Value) * (Y2_Target_Value - Y1_Origin_Value);
-      if (LoW_Value <= 0) LoW_Value *(-1); //Make sure value is not <0
-      Length_ofWay_Value = sqrt(LoW_Value);
 
-      TotalNof_Steps_Value = Min_Resolution_Value / Length_ofWay_Value;
+  void setDoneSteps(unsigned long Dsteps) {
+    Done_Steps_Value = Dsteps;
 
-      Serial.print(" Length_ofWay_Value ");
-      Serial.print(Length_ofWay_Value);
-      Serial.print(" TotalNof_Steps_Value ");
-      Serial.println(TotalNof_Steps_Value);
+    Serial.print(" sDS: Done_Steps_Value ");
+    Serial.print(Done_Steps_Value);
+     }
 
-    } else if (Done_Steps_Value <= TotalNof_Steps_Value) {
-      //calculate Q Value
-      Q_Value = Done_Steps_Value /TotalNof_Steps_Value;
+  void Interpolate() {
+      double LoW_Value = 0;
+      double Q_Value = 0;
 
-Xz_NextStep_Value = ((1-Q_Value)*X1_Origin_Value)+(Q_Value*X2_Target_Value);
-Yz_NextStep_Value = ((1-Q_Value)*Y1_Origin_Value)+(Q_Value*Y2_Target_Value);
 
-    Serial.print(" Xz_NextStep_Value ");
-      Serial.print(Xz_NextStep_Value);
-      Serial.print(" Yz_NextStep_Value ");
-      Serial.println(Yz_NextStep_Value);
-      Done_Steps_Value++;
-      
+      if (Done_Steps_Value == 0) {  // Calculations once per Interpolate session
+        LoW_Value = (Y2_Target_Value - Y1_Origin_Value) * (Y2_Target_Value - Y1_Origin_Value);
+        if (LoW_Value <= 0) LoW_Value *(-1);  //Make sure value is not <0
+        Length_ofWay_Value = sqrt(LoW_Value); //if it is 0 then there is nothing to do
+        if(Length_ofWay_Value == 0)TotalNof_Steps_Value = 0; //Number of Steps is also gona be 0
+        else{TotalNof_Steps_Value = Length_ofWay_Value / Min_Resolution_Value ;     
+        
 
+        Serial.print(" Ib: TotalNof_Steps_Value ");
+        Serial.print(TotalNof_Steps_Value);
+         Serial.print(" = Min_Res:  ");
+        Serial.print(Min_Resolution_Value);
+         Serial.print(" / ");
+        Serial.print(Length_ofWay_Value);
+         Serial.println("mm ");
+        }
+      }
+      //interpolation
+      if ((Done_Steps_Value <= TotalNof_Steps_Value)and (TotalNof_Steps_Value >0)) {
+        //calculate Q Value
+
+
+        Q_Value = Done_Steps_Value / (TotalNof_Steps_Value*1.00);
+        /*Serial.print(" Ic: Q_Value = ");
+        Serial.print( Done_Steps_Value);
+        Serial.print(" / ");
+        Serial.println(TotalNof_Steps_Value);*/
+        
+
+        Xz_NextStep_Value = ((1 - Q_Value) * X1_Origin_Value) + (Q_Value * X2_Target_Value);
+        Yz_NextStep_Value = ((1 - Q_Value) * Y1_Origin_Value) + (Q_Value * Y2_Target_Value);
+        /*
+        Serial.println(" Ic: Xz_NextStep_Value = ((1 - Q_Value) * X1_Origin_Value) + (Q_Value * X2_Target_Value);");
+        Serial.print(" ((");
+        Serial.print(1);
+        Serial.print(" - ");
+        Serial.print(Q_Value);
+        Serial.print(" )) *  ");
+        Serial.print(X1_Origin_Value);
+        Serial.print(" ) + (");
+        Serial.print(Q_Value);
+        Serial.print(" * ");
+        Serial.print(X2_Target_Value);
+        Serial.println(" ) ");
+*/
+
+        Serial.print(" Ic: Xz_NextStep_Value ");
+        Serial.print(Xz_NextStep_Value);
+        Serial.print(" Yz_NextStep_Value ");
+        Serial.print(Yz_NextStep_Value);
+        Serial.print(" Done_Steps_Value ");
+        Serial.print(Done_Steps_Value);
+        Serial.print(" <= ");
+        Serial.println(TotalNof_Steps_Value);
+
+        Done_Steps_Value++;
+
+//interpolation finished
+      } else if ((Done_Steps_Value >= TotalNof_Steps_Value)and (TotalNof_Steps_Value >0)) {
+
+        Serial.print(" Id: Xz_NextStep_Value: ");
+        Serial.print(Xz_NextStep_Value);
+        Serial.print(" Yz_NextStep_Value ");
+        Serial.println(Yz_NextStep_Value);
+        Serial.print(" Id: X2_Target_Value  : ");
+        Serial.print(X2_Target_Value);
+        Serial.print(" Y2_Target_Value  : ");
+        Serial.println(Y2_Target_Value);
+
+        Y1_Origin_Value = Yz_NextStep_Value;
+        X1_Origin_Value = Xz_NextStep_Value;
+
+        Serial.print(" Id: X1_Origin_Value  : ");
+        Serial.print(X1_Origin_Value);
+        Serial.print(" Y1_Origin_Value  : ");
+        Serial.println(Y1_Origin_Value);
+
+        Done_Steps_Value = 0;
+        Length_ofWay_Value = 0;
+
+        Serial.println(" Finished Interpolate ");
+
+      } else {
+        Serial.println(" Int: no Change ");
+      }
     }
-    else if(Done_Steps_Value >= TotalNof_Steps_Value) {
-
-      Serial.print(" Xz_NextStep_Value: ");
-      Serial.print(Xz_NextStep_Value);
-      Serial.print(" Yz_NextStep_Value ");
-      Serial.println(Yz_NextStep_Value);
-      Serial.print(" X2_Target_Value  : ");
-      Serial.print(X2_Target_Value);
-      Serial.print(" Y2_Target_Value  : ");
-      Serial.println(Y2_Target_Value);
-
-      Y1_Origin_Value = Yz_NextStep_Value;
-      X1_Origin_Value = Xz_NextStep_Value;
-
-      Serial.print(" X1_Origin_Value  : ");
-      Serial.print(X1_Origin_Value);
-      Serial.print(" Y1_Origin_Value  : ");
-      Serial.println(Y1_Origin_Value);
-
-      Done_Steps_Value= 0;
-      TotalNof_Steps_Value =0;
-      Length_ofWay_Value=0;
-      
-   Serial.println(" Finished Interpolate ");
-
-}
-else{    Serial.println(" Error Interpolate ");}
-
-  }
-};
+  };
 
 #endif

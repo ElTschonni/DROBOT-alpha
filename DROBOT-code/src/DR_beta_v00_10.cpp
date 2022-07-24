@@ -44,8 +44,9 @@
 #define Mright_DIPSW_Value 0b0010  //initial Motor Speed in RPM
 #define Mleft_DIPSW_Value 0b0010   //initial Motor Speed in RPM
 
-
-
+//Robot Measurements:
+#define length_BaseToTip_Value 630  // length from the rotation axis to the tool tip in mm
+#define max_TimeForComand_value 60  //maximum time for one command in s
 
 //IOPorts //Adresses of Pins for Adafruit MCP23017
 #define Mright_Pull_Pin 8      //	GPB0	MCP23017
@@ -88,6 +89,7 @@ WiFiMulti wiFiMulti;
 Adafruit_MCP23X17 GPIO_Ports_Instanz;                         //creating the MCP23017 Instance
 Closed_Loop_Step_Motor Motor_Left_Ins(&GPIO_Ports_Instanz);   //creating the Left Motor Instance
 Closed_Loop_Step_Motor Motor_Right_Ins(&GPIO_Ports_Instanz);  //creating the Right Motor Instance
+Motor_Movement_Calc MM_Calc_Ins;                              //create the motor movement calculation instance
 
 
 //==============================================================================*/
@@ -133,6 +135,7 @@ int Mleft_Speed_Value = 1;   //initial Motor Speed in RPM
 uint16_t CBneuerBefehl(TRegister* reg, uint16_t val) {
   if (Start_StateMachine == false) {
     Serial.println("Neuer Befehl!");
+    programSelector = 2;
     Befehl = mb.Hreg(BEFEHL_HREG);
     Start_StateMachine = true;
   }
@@ -161,6 +164,46 @@ uint16_t CBneuerParameterF(TRegister* reg, uint16_t val) {
 }
 
 
+
+//=========| Funktionen Program |=========================================*/
+void moveToNewPositionLeft() {
+  unsigned long counterTollerance = 0;
+  bool exitStep = false;
+
+  do {
+    //   Serial.print(" Number of Steps: ");
+    //   Serial.print(counterTollerance++);
+
+    do {  //do one step
+      if (Motor_Left_Ins.OneStepDir() == 0) exitStep = false;
+      else { exitStep = true; }
+      if (Motor_Left_Ins.errorcode > 0) exitStep = true;
+    } while (exitStep == false);
+
+  } while (!Motor_Left_Ins.Angle_Tollerance_Value);
+
+  counterTollerance = 0;
+}
+
+void moveToNewPositionRight() {
+  unsigned long counterTollerance = 0;
+  bool exitStep = false;
+
+  do {
+    //   Serial.print(" Number of Steps: ");
+    //   Serial.print(counterTollerance++);
+
+    do {  //do one step
+      if (Motor_Right_Ins.OneStepDir() == 0) exitStep = false;
+      else { exitStep = true; }
+      if (Motor_Right_Ins.errorcode > 0) exitStep = true;
+    } while (exitStep == false);
+
+  } while (!Motor_Right_Ins.Angle_Tollerance_Value);
+
+  counterTollerance = 0;
+}
+
 //=========| Funktionen StateMachine |=========================================*/
 
 
@@ -168,6 +211,7 @@ uint16_t CBneuerParameterF(TRegister* reg, uint16_t val) {
 int Standby()  //State 1
 {
   Serial.println("------ Standby -------");
+  programSelector = 1;
 
   mb.task();
   mb.Hreg(STATUS_HREG, Status);
@@ -185,7 +229,7 @@ int Standby()  //State 1
 
 
 
-  return (2);
+  return (programSelector);
 }
 
 int Receive()  //State 2 Verarbeitung
@@ -218,10 +262,11 @@ int Receive()  //State 2 Verarbeitung
       Serial.print(Z);
       Serial.print(" F");
       Serial.println(F);
-      Xneu = X;  // Neues X von Modbus
-      Yneu = Y;  // Neues Y von Modbus
-      Alpha = 0.0;
-      Status = 2;  // gehe zu busy
+
+      MM_Calc_Ins.X2_Target_Value = X;  // Neues X von Modbus
+      MM_Calc_Ins.Y2_Target_Value = Y;  // Neues Y von Modbus
+      MM_Calc_Ins.Done_Steps_Value = 0;
+      Status = 2;  // gehe zu draw
       return (3);
 
     } else {
@@ -229,7 +274,6 @@ int Receive()  //State 2 Verarbeitung
       return (4);
     }
   }
-
 
   /*
   if (Timer_Start_01 + Timer_Interval_01 < micros()) {
@@ -242,26 +286,28 @@ int Draw() {  //State 3
   Serial.println("------ Draw -------");
   double old_Angle_value = 0;
   double new_Angle_value = 0;
-  unsigned long counterTollerance = 0;
-  bool exitStep = false;
-
 
   //delay(500);
   Serial.println("Robot is Calculationg Coordinates ");
- 
+
   //MotorControll Motor Left
   Motor_Left_Ins.test();  //Motor Class Test
 
-  // delay(500);
+  delay(500);
   Serial.println("Robot is Calculationg Route ");
 
+  //297mm*420mm
+  MM_Calc_Ins.setTargetCoordinates(MM_Calc_Ins.X2_Target_Value, MM_Calc_Ins.Y2_Target_Value);  //test coordinates
+  MM_Calc_Ins.Interpolate();
+
+  /*
   //1. set new angle
   if (Motor_Left_Ins.setNewAngelValue(random(0, 360))) Serial.println("Motor Left Set Angle: Succeed");
   else {
     Serial.println("Motor Left Set Angle: Failed");
     return (5);
   }
-
+*/
 
   Serial.println("Robot is drawing ");
   Serial.print("Old Angle: ");
@@ -271,25 +317,38 @@ int Draw() {  //State 3
 
   Serial.print("Tollerance: ");
   Serial.println(Motor_Left_Ins.Angle_Tollerance_Value);
-//move from old angle to new angle
-  do {
- //   Serial.print(" Number of Steps: ");
- //   Serial.print(counterTollerance++);
-  
-do{//do one step
-  if(Motor_Left_Ins.OneStepDir()==0)exitStep = false;
-  else{exitStep = true;} 
-  if(Motor_Left_Ins.errorcode>0)exitStep = true;
-} while (exitStep == false);
+  //move from old angle to new angle
+  /*
+moveToNewPositionLeft();
+moveToNewPositionRight();
+*/
+  //moveToNewPosition();
 
-  } while (!Motor_Left_Ins.Angle_Tollerance_Value);
-
-  counterTollerance = 0;
-
+//exit conditions:
   Start_StateMachine = false;
 
-   if(Motor_Left_Ins.errorcode>0){Status = 4;return (5);}
-   else{Status = 1;return (1);}
+  if (Motor_Left_Ins.errorcode > 0) {
+    Status = 3;
+    return (5);
+  }
+  //if the current coordinates are not equal to the target coordinates do the loop again
+  else if ((MM_Calc_Ins.Xz_NextStep_Value < MM_Calc_Ins.X2_Target_Value) and (MM_Calc_Ins.Yz_NextStep_Value < MM_Calc_Ins.Y2_Target_Value)) {
+    Status = 2;
+    return (3);
+  } else if ((MM_Calc_Ins.Xz_NextStep_Value == MM_Calc_Ins.X2_Target_Value) and (MM_Calc_Ins.Yz_NextStep_Value == MM_Calc_Ins.Y2_Target_Value)) {
+
+    Serial.print("New Coordinates have been reached: Xz ");
+    Serial.print(MM_Calc_Ins.Xz_NextStep_Value);
+    Serial.print("Yz ");
+    Serial.print(MM_Calc_Ins.Yz_NextStep_Value);
+    Serial.print(" / X2 ");
+    Serial.print(MM_Calc_Ins.X2_Target_Value);
+    Serial.print(" / Y2 ");
+    Serial.println(MM_Calc_Ins.Y2_Target_Value);
+    Serial.print(" Waiting for new Coordinates ");
+    Status = 1;
+    return (1);
+  }
 }
 
 int WrongCommand()  //State 4, steuert die Motoren
@@ -305,8 +364,8 @@ int Error() {  //State 5
   Serial.println(Motor_Left_Ins.errorcode);
   Serial.print(" Error Code Motor Right: ");
   Serial.println(Motor_Right_Ins.errorcode);
-
-  Status = 4;
+Motor_Left_Ins.errorcode=0;
+  Status = 1;
 
   return (1);
 }
@@ -404,7 +463,6 @@ int Init() {  // State 6
   Serial.print("ALML: ");
   Serial.println(GPIO_Ports_Instanz.digitalRead(Mleft_Alarm_Pin));
 
-  Motor_Left_Ins.enableMotor();
 
   //Initialize Motor Right
   Serial.println("Init: Motor Right");
@@ -491,23 +549,69 @@ int Init() {  // State 6
   Serial.println("Init: Motor Right Succeed");
   M5.lcd.println("Init: Motor Right Succeed");
 
+  //init calculation class
+  Serial.println("Init: Calculation");
+  M5.lcd.println("Init: Calculation");
+
+  MM_Calc_Ins.setupInterpolate(Motor_Left_Ins.Steps_Per_rev, Motor_Left_Ins.Angle_Per_step, length_BaseToTip_Value);
+  MM_Calc_Ins.setMaxTime(max_TimeForComand_value);
+  MM_Calc_Ins.setDoneSteps(0);
+  Serial.println("Init: Calculation Succeed");
+  M5.lcd.println("Init: Calculation Succeed");
   return (7);
 }
 
 int Calibrate() {  //State 7
   Serial.println("------ Calibration -------");
+  //1. move Motor left to endpoint 1
 
+
+  //2.save Angle of Motor left
+
+  if (Motor_Left_Ins.setOldAngelValue(90)) Serial.println("Motor Left Set Angle: Succeed");
+  else {
+    Serial.println("Motor Left Set Angle: Failed");
+    return (5);
+  }
+
+  //3. move Motor left to position 180°
   if (Motor_Left_Ins.setOldAngelValue(180)) Serial.println("Motor Left Set Angle: Succeed");
   else {
     Serial.println("Motor Left Set Angle: Failed");
     return (5);
   }
 
-  if (Motor_Right_Ins.setOldAngelValue(0)) Serial.println("Motor Right Set Angle: Succeed");
+  moveToNewPositionLeft();
+
+  //4. move Motor right to enpoint 2
+
+
+  //5. save position of Motor Right
+
+  if (Motor_Right_Ins.setOldAngelValue(90)) Serial.println("Motor Right Set Angle: Succeed");
   else {
     Serial.println("Motor Right Set Angle: Failed");
     return (5);
   }
+  //6. move to position 0/0
+  //inverse Kinematic
+
+
+
+  //set origin Coordinates to x0/y0
+  MM_Calc_Ins.setOriginCoordinates(0, 0);
+
+  Serial.print(" Calibration: New Coordinates: X: ");
+  Serial.print(MM_Calc_Ins.X1_Origin_Value);
+  Serial.print(" Y: ");
+  Serial.println(MM_Calc_Ins.Y1_Origin_Value);
+
+  Serial.print(" Calibration: Successfull ");
+  Serial.println(Motor_Right_Ins.errorcode);
+
+
+
+
   Status = 1;
   return (1);
 }
@@ -669,8 +773,8 @@ void loop() {
       cycleCounter = 0;
     }
     cycleCounter++;
- Serial.print(" state: ");
-  Serial.println(state);
+    Serial.print(" state: ");
+    Serial.println(state);
 
     switch (state) {
       case 1: state = Standby(); break;  //Standby
