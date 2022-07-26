@@ -41,12 +41,36 @@
 #define Mright 1
 #define Mleft 0
 
+#define right_Arm 1
+#define left_Arm 0
+
 #define Mright_DIPSW_Value 0b0010  //initial Motor Speed in RPM
 #define Mleft_DIPSW_Value 0b0010   //initial Motor Speed in RPM
 
 //Robot Measurements:
 #define length_BaseToTip_Value 630  // length from the rotation axis to the tool tip in mm
 #define max_TimeForComand_value 60  //maximum time for one command in s
+
+
+#define Lenght_UpArm_Value 252   //length of the  Upper Arm in mm
+#define Lenght_LowArm_Value 333  //length of the  Lower Arm in mm
+
+#define MeetingPoint_TipPoint_Value 60       //length between tip of the tool and meeting point of arms
+#define MeetingPoint_TipPoint_AngleValue 45  //Angle of the line between Meetingpoint to tip of the tool
+#define DeltaX_LeftArm_Value 254             //Delta X from center to rotation point of the Left Arm
+#define DeltaX_RightArm_Value 404            //Delta X from center to rotation point of the Right Arm
+#define Transmission_LeftArm_Value 1
+#define Transmission_RightArm_Value 1
+
+#define Coordinate_maxX_Value 600
+#define Coordinate_minX_Value 100
+#define Coordinate_maxY_Value 550
+#define Coordinate_minY_Value 200
+
+#define Coordinate_0X_Value 150
+#define Coordinate_0Y_Value 220
+
+
 
 //IOPorts //Adresses of Pins for Adafruit MCP23017
 #define Mright_Pull_Pin 8      //	GPB0	MCP23017
@@ -74,12 +98,12 @@
 
 //Set Constants for modbus
 // G01 X30.00 Y100.00 Z10.00 F100
-const int BEFEHL_HREG = 0;  // Hreg 0 für den Befehl, z.B. G01
-const int X_HREG = 1;       // Hreg 1 für die X-Koordinate
-const int Y_HREG = 2;       // Hreg 2 für die Y-Koordinate
-const int Z_HREG = 3;       // Hreg 3 für die Z-Koordinate
-const int F_HREG = 4;       // Hreg 4 für die Geschwindigkeit
-const int STATUS_HREG = 5;  // Hreg 5 für den Zustand der StateMachine
+const long BEFEHL_HREG = 0;  // Hreg 0 für den Befehl, z.B. G01
+const long X_HREG = 1;       // Hreg 1 für die X-Koordinate
+const long Y_HREG = 2;       // Hreg 2 für die Y-Koordinate
+const long Z_HREG = 3;       // Hreg 3 für die Z-Koordinate
+const long F_HREG = 4;       // Hreg 4 für die Geschwindigkeit
+const long STATUS_HREG = 5;  // Hreg 5 für den Zustand der StateMachine
 
 
 //=========| initializing Classes |==================================================*/
@@ -90,17 +114,18 @@ Adafruit_MCP23X17 GPIO_Ports_Instanz;                         //creating the MCP
 Closed_Loop_Step_Motor Motor_Left_Ins(&GPIO_Ports_Instanz);   //creating the Left Motor Instance
 Closed_Loop_Step_Motor Motor_Right_Ins(&GPIO_Ports_Instanz);  //creating the Right Motor Instance
 Motor_Movement_Calc MM_Calc_Ins;                              //create the motor movement calculation instance
-
+Delta2D_Kinematic D2D_RightArm_Kin;                           //create the Kinematic Calculation instance
+Delta2D_Kinematic D2D_LeftArm_Kin;                            //create the Kinematic Calculation instance
 
 //==============================================================================*/
 //=========| deklaration von Variabeln |========================================*/
-int programSelector = 6;  //Program selection variable
+unsigned int programSelector = 6;  //Program selection variable
 
-int StartUp = 1;
-
+unsigned int StartUp = 1;
+unsigned int LastState =0;
 
 bool Start_StateMachine = false;
-int Status = 1;  // 1 ready
+unsigned int Status = 1;  // 1 ready
 uint Befehl = 0;
 
 
@@ -115,15 +140,15 @@ unsigned long Timer_Interval_02 = 10000;
 
 //ModBus
 
-float X, Y, Z, F;
-float Alpha;
-float Px, Xaktuell, Xneu;
-float Py, Yaktuell, Yneu;
+unsigned long X, Y, Z, F;
+unsigned long Alpha;
+unsigned long Px, Xaktuell, Xneu;
+unsigned long Py, Yaktuell, Yneu;
 
 
 // Motor Variabeln
-int Mright_Speed_Value = 1;  //initial Motor Speed in RPM
-int Mleft_Speed_Value = 1;   //initial Motor Speed in RPM
+long Mright_Speed_Value = 1;  //initial Motor Speed in RPM
+long Mleft_Speed_Value = 1;   //initial Motor Speed in RPM
 
 //==============================================================================*/
 //=========| Funktionen ModBus |=========================================*/
@@ -138,28 +163,33 @@ uint16_t CBneuerBefehl(TRegister* reg, uint16_t val) {
     programSelector = 2;
     Befehl = mb.Hreg(BEFEHL_HREG);
     Start_StateMachine = true;
+    LastState =0;
   }
   return val;
 }
 
 uint16_t CBneuerParameterX(TRegister* reg, uint16_t val) {
   Serial.println("Neue Parameter X!");
-  X = mb.Hreg(X_HREG) / 100.0;  // X in 100stel Millimeter
+  X = (mb.Hreg(X_HREG) / 100) + (Coordinate_0X_Value);  // X in 100stel Millimeter
+  LastState =0;
   return val;
 }
 uint16_t CBneuerParameterY(TRegister* reg, uint16_t val) {
   Serial.println("Neue Parameter Y!");
-  Y = mb.Hreg(Y_HREG) / 100.0;
+  Y = (mb.Hreg(Y_HREG) / 100) + (Coordinate_0Y_Value);
+  LastState =0;
   return val;
 }
 uint16_t CBneuerParameterZ(TRegister* reg, uint16_t val) {
   Serial.println("Neue Parameter Z!");
-  Z = mb.Hreg(Z_HREG) / 100.0;
+  Z = mb.Hreg(Z_HREG);
+ LastState =0;
   return val;
 }
 uint16_t CBneuerParameterF(TRegister* reg, uint16_t val) {
   Serial.println("Neue Parameter F!");
   F = mb.Hreg(F_HREG);  // Geschwindigkeit in mm/min
+  LastState =0;
   return val;
 }
 
@@ -208,31 +238,37 @@ void moveToNewPositionRight() {
 
 
 
-int Standby()  //State 1
-{
-  Serial.println("------ Standby -------");
-  programSelector = 1;
-
+unsigned int Standby()  //State 1
+{Start_StateMachine = false;
   mb.task();
   mb.Hreg(STATUS_HREG, Status);
+  if(LastState !=1){
+  Serial.print("- Standby: ");
+  //programSelector = 1;
+
   Serial.print(STATUS_HREG);
   Serial.print(Status);
   M5.lcd.print(Status);
-
   Serial.print("- Roboter_State: ");
-  Serial.println(Status);
-  Serial.print("- GCode_Command: ");
-  Serial.println(Befehl);
-  Serial.print("- Start Statemachine: ");
+  M5.lcd.print("- Roboter_State: ");
+  Serial.print(Status);
+  M5.lcd.print(Status);
+  Serial.print(" GCode_Command: ");
+  M5.lcd.print(" GCode_Command: ");
+  Serial.print(Befehl);
+  M5.lcd.print(Befehl);
+  Serial.print(" Start Statemachine: ");
+  M5.lcd.print(" Start Statemachine: ");
   Serial.println(Start_StateMachine);
+  M5.lcd.println(Start_StateMachine);}
   //GPIO_Ports_Instanz.digitalWrite(Clamp_Servo_Pin, HIGH);
 
 
-
+LastState =1;
   return (programSelector);
 }
 
-int Receive()  //State 2 Verarbeitung
+unsigned int Receive()  //State 2 Verarbeitung
 {
   mb.task();
   Serial.println("------ State Receive------");
@@ -263,11 +299,37 @@ int Receive()  //State 2 Verarbeitung
       Serial.print(" F");
       Serial.println(F);
 
-      MM_Calc_Ins.X2_Target_Value = X;  // Neues X von Modbus
-      MM_Calc_Ins.Y2_Target_Value = Y;  // Neues Y von Modbus
+      MM_Calc_Ins.setTargetCoordinates(X, Y);
+
       MM_Calc_Ins.Done_Steps_Value = 0;
+
       Status = 2;  // gehe zu draw
       return (3);
+
+      /*
+
+      if(X>(Coordinate_maxX_Value)){
+           Serial.println("Warning: X Coordinates above <Radius of Action>");
+      Status = 3;  // gehe zu draw
+      return (5);
+      }
+      if(X<(Coordinate_minX_Value)){
+         Serial.println("Warning: X Coordinates below <Radius of Action>");
+      Status = 3;  // gehe zu draw
+      return (5);
+      }
+            if(Y>(Coordinate_maxY_Value)){
+               Serial.println("Warning: Y Coordinates above <Radius of Action>");
+      Status = 3;  // gehe zu draw
+      return (5);
+      }
+            if(Y<(Coordinate_minY_Value)){
+               Serial.println("Warning: Y Coordinates below <Radius of Action>");
+      Status = 3;  // gehe zu draw
+      return (5);
+      }
+
+*/
 
     } else {
       Status = 3;  // falscher Befehl
@@ -280,34 +342,72 @@ int Receive()  //State 2 Verarbeitung
     Timer_Start_01 = micros();
     Timer_Interval_01 = 1000000;
   }*/
+  LastState =2;
 }
 
-int Draw() {  //State 3
+unsigned int Draw() {  //State 3
   Serial.println("------ Draw -------");
   double old_Angle_value = 0;
   double new_Angle_value = 0;
+  unsigned long determinant_RightArm_Value = 0;
+  unsigned long determinant_LeftArm_Value = 0;
 
   //delay(500);
   Serial.println("Robot is Calculationg Coordinates ");
 
-  //MotorControll Motor Left
+  //1.Step: LED Blink,
   Motor_Left_Ins.test();  //Motor Class Test
 
-  delay(500);
+  //delay(100);
   Serial.println("Robot is Calculationg Route ");
 
-  //297mm*420mm
-  MM_Calc_Ins.setTargetCoordinates(MM_Calc_Ins.X2_Target_Value, MM_Calc_Ins.Y2_Target_Value);  //test coordinates
+  //2.Step:  set new target coordinates and start the interpolation:
+  //test coordinates
+
   MM_Calc_Ins.Interpolate();
 
-  /*
-  //1. set new angle
-  if (Motor_Left_Ins.setNewAngelValue(random(0, 360))) Serial.println("Motor Left Set Angle: Succeed");
+  //3.Step: Calculate new Angle to reach thos coordinates.
+  //Right arm first
+  determinant_RightArm_Value = D2D_RightArm_Kin.IntersectionOfTwoCircles(DeltaX_RightArm_Value, 0, MM_Calc_Ins.Xz_NextStep_Value, MM_Calc_Ins.Yz_NextStep_Value);
+  if (determinant_RightArm_Value == 2) {
+    D2D_RightArm_Kin.InverseKinematic(right_Arm);
+    Serial.print("New Angle 1 for right Arm is:  ");
+    Serial.println(D2D_RightArm_Kin.angle_RightArm_Value1);
+    Serial.print("New Angle 2 for right Arm is:  ");
+    Serial.println(D2D_RightArm_Kin.angle_RightArm_Value2);
+  }
+
+  else {
+
+    Serial.print("Kinematic Error:  ");
+    Serial.println(determinant_RightArm_Value);
+  }
+
+//Left Arm
+  determinant_LeftArm_Value = D2D_LeftArm_Kin.IntersectionOfTwoCircles(DeltaX_LeftArm_Value, 0, MM_Calc_Ins.Xz_NextStep_Value, MM_Calc_Ins.Yz_NextStep_Value);
+  if (determinant_LeftArm_Value == 2) {
+    D2D_LeftArm_Kin.InverseKinematic(left_Arm);
+    Serial.print("New Angle 1 for left Arm is:  ");
+    Serial.println(D2D_LeftArm_Kin.angle_LeftArm_Value1);
+    Serial.print("New Angle 2 for left Arm is:  ");
+    Serial.println(D2D_LeftArm_Kin.angle_LeftArm_Value2);
+  }
+
+
+  else {
+
+    Serial.print("Kinematic Error:  ");
+    Serial.println(determinant_LeftArm_Value);
+  }
+
+
+  //4.Step:  set new angle
+  if (Motor_Left_Ins.setNewAngelValue(D2D_LeftArm_Kin.angle_LeftArm_Value2)) Serial.println("Motor Left Set Angle: Succeed");
   else {
     Serial.println("Motor Left Set Angle: Failed");
     return (5);
   }
-*/
+
 
   Serial.println("Robot is drawing ");
   Serial.print("Old Angle: ");
@@ -317,26 +417,38 @@ int Draw() {  //State 3
 
   Serial.print("Tollerance: ");
   Serial.println(Motor_Left_Ins.Angle_Tollerance_Value);
-  //move from old angle to new angle
-  /*
+
+  //5.Step: move from old angle to new angle
+
 moveToNewPositionLeft();
 moveToNewPositionRight();
-*/
+
   //moveToNewPosition();
 
-//exit conditions:
+  //6.Step: exit conditions:
   Start_StateMachine = false;
-
+//delay(3000);
+  //7.Step: if there was an error, go to State 3 Error
   if (Motor_Left_Ins.errorcode > 0) {
     Status = 3;
     return (5);
   }
-  //if the current coordinates are not equal to the target coordinates do the loop again
+  //8.Step: if the current coordinates are not equal to the target coordinates do the loop again
   else if ((MM_Calc_Ins.Xz_NextStep_Value < MM_Calc_Ins.X2_Target_Value) and (MM_Calc_Ins.Yz_NextStep_Value < MM_Calc_Ins.Y2_Target_Value)) {
-    Status = 2;
-    return (3);
+        Serial.print("Coordinates do not match ");
+    Serial.print(MM_Calc_Ins.Xz_NextStep_Value);
+    Serial.print("Yz ");
+    Serial.print(MM_Calc_Ins.Yz_NextStep_Value);
+    Serial.print(" / X2 ");
+    Serial.print(MM_Calc_Ins.X2_Target_Value);
+    Serial.print(" / Y2 ");
+    Serial.println(MM_Calc_Ins.Y2_Target_Value);
+    Serial.print(" One More Stepp ");
+    
+if ((MM_Calc_Ins.Xz_NextStep_Value == 0) or (MM_Calc_Ins.Yz_NextStep_Value == 0)) return(5); 
+else{    Status = 2;    return (3);}
   } else if ((MM_Calc_Ins.Xz_NextStep_Value == MM_Calc_Ins.X2_Target_Value) and (MM_Calc_Ins.Yz_NextStep_Value == MM_Calc_Ins.Y2_Target_Value)) {
-
+    //9.Step: if the Target Coordinates are equal to the current coordinates, go to state 1
     Serial.print("New Coordinates have been reached: Xz ");
     Serial.print(MM_Calc_Ins.Xz_NextStep_Value);
     Serial.print("Yz ");
@@ -349,29 +461,36 @@ moveToNewPositionRight();
     Status = 1;
     return (1);
   }
+
+    LastState =3;
 }
 
-int WrongCommand()  //State 4, steuert die Motoren
+unsigned int WrongCommand()  //State 4, steuert die Motoren
 {
   Serial.println("------ Wrong Command -------");
   Status = 1;
   return (1);
+    LastState =4;
 }
 
-int Error() {  //State 5
+unsigned int Error() {  //State 5
   Serial.println("------ Error -------");
   Serial.print(" Error Code Motor Left: ");
   Serial.println(Motor_Left_Ins.errorcode);
   Serial.print(" Error Code Motor Right: ");
   Serial.println(Motor_Right_Ins.errorcode);
-Motor_Left_Ins.errorcode=0;
+
+
+  Motor_Left_Ins.errorcode = 0;
+    Motor_Right_Ins.errorcode = 0;
   Status = 1;
 
   return (1);
+    LastState =5;
 }
 
 
-int Init() {  // State 6
+unsigned int Init() {  // State 6
   Serial.println("------ Initialize -------");
   M5.lcd.println("------ Initialize -------");
   //Initialize Motor Left
@@ -556,12 +675,26 @@ int Init() {  // State 6
   MM_Calc_Ins.setupInterpolate(Motor_Left_Ins.Steps_Per_rev, Motor_Left_Ins.Angle_Per_step, length_BaseToTip_Value);
   MM_Calc_Ins.setMaxTime(max_TimeForComand_value);
   MM_Calc_Ins.setDoneSteps(0);
+  D2D_RightArm_Kin.setupDelta2D_Kinematic(
+    Lenght_UpArm_Value, Lenght_LowArm_Value,
+    MeetingPoint_TipPoint_Value, MeetingPoint_TipPoint_AngleValue,
+    DeltaX_LeftArm_Value, DeltaX_RightArm_Value,
+    Transmission_LeftArm_Value, Transmission_RightArm_Value);
+  
+  D2D_LeftArm_Kin.setupDelta2D_Kinematic(
+    Lenght_UpArm_Value, Lenght_LowArm_Value,
+    MeetingPoint_TipPoint_Value, MeetingPoint_TipPoint_AngleValue,
+    DeltaX_LeftArm_Value, DeltaX_RightArm_Value,
+    Transmission_LeftArm_Value, Transmission_RightArm_Value);
+
+
   Serial.println("Init: Calculation Succeed");
   M5.lcd.println("Init: Calculation Succeed");
   return (7);
+    LastState =7;
 }
 
-int Calibrate() {  //State 7
+unsigned int Calibrate() {  //State 7
   Serial.println("------ Calibration -------");
   //1. move Motor left to endpoint 1
 
@@ -594,12 +727,15 @@ int Calibrate() {  //State 7
     return (5);
   }
   //6. move to position 0/0
+  MM_Calc_Ins.setTargetCoordinates(Coordinate_0X_Value,Coordinate_0Y_Value);
+
+
   //inverse Kinematic
 
 
 
   //set origin Coordinates to x0/y0
-  MM_Calc_Ins.setOriginCoordinates(0, 0);
+  MM_Calc_Ins.setOriginCoordinates(Coordinate_0X_Value, Coordinate_0Y_Value);
 
   Serial.print(" Calibration: New Coordinates: X: ");
   Serial.print(MM_Calc_Ins.X1_Origin_Value);
@@ -614,6 +750,7 @@ int Calibrate() {  //State 7
 
   Status = 1;
   return (1);
+   LastState =8;
 }
 
 
@@ -621,14 +758,10 @@ int Calibrate() {  //State 7
 //=========| MAIN |=============================================================*/
 //=========| setup |============================================================*/
 void setup() {
-  int error;
+  long error;
 
 
   M5.begin();
-
-  delay(1000);
-
-
   //serial communiction
   Serial.begin(baudRate);      // open the serial port
   while (!Serial) delay(100);  // wait for native usb
@@ -691,7 +824,7 @@ void setup() {
   M5.lcd.print("Waiting connect to WiFi...");
 
   wiFiMulti.addAP(WLAN_SSID, WLAN_PASSWD);
-  int sum = 0;
+  long sum = 0;
 
   while (wiFiMulti.run() != WL_CONNECTED) {
     delay(500);
@@ -761,8 +894,8 @@ void setup() {
 
 //=========| Hauptprogramm    |=================================================*/
 void loop() {
-  int cycleCounter = 0;
-  int state = 1;
+  unsigned int cycleCounter = 0;
+  unsigned int state = 1;
 
   while (1) {
     state = programSelector;
@@ -773,8 +906,6 @@ void loop() {
       cycleCounter = 0;
     }
     cycleCounter++;
-    Serial.print(" state: ");
-    Serial.println(state);
 
     switch (state) {
       case 1: state = Standby(); break;  //Standby

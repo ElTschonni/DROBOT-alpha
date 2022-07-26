@@ -31,6 +31,9 @@
 #define Motor_Turn_left 0
 #define Motor_Position_right 1
 #define Motor_Position_left 0
+#define right_Arm 1
+#define left_Arm 0
+
 
 #define PI 3.1415926535897932384626433832795
 #define HALF_PI 1.5707963267948966192313216916398
@@ -50,21 +53,21 @@
 class Closed_Loop_Step_Motor  //CLSM
 {
 private:
-  int us_timer_state;
+  long us_timer_state;
   unsigned long us_timer_value;
   unsigned long us_timer_start;
   //Motor Pin Configuration
-  int Motor_Enable_Pin;  //Hardware configuration of the Enable pin
-  int Motor_Pull_Pin;    //Pull Pin Puls to move by one step
-  int Motor_Dir_Pin;     //Direction pin - set to high to move right, low for left
-  int Motor_Alarm_Pin;   //Alarm Pin
-  int Motor_Ped_Pin;     // Confirmation bit for reaching the new stepp
+  long Motor_Enable_Pin;  //Hardware configuration of the Enable pin
+  long Motor_Pull_Pin;    //Pull Pin Puls to move by one step
+  long Motor_Dir_Pin;     //Direction pin - set to high to move right, low for left
+  long Motor_Alarm_Pin;   //Alarm Pin
+  long Motor_Ped_Pin;     // Confirmation bit for reaching the new stepp
 
   //  Adafruit_MCP23X17 GPIO_I2C_Exp;
   Adafruit_MCP23X17 *GPIO_I2C_Exp;
 
 
-  long int delayNumber = 0;
+  long long delayNumber = 0;
 
   //Motor Pin Values
   bool Motor_Enable_Value = false;
@@ -74,7 +77,7 @@ private:
   bool Motor_Ped_Value = false;
   bool Motor_Position_Value = Motor_Position_right;  //1 = right. 0 = left
 
-  int Dip_Switch_Value = 0;
+  long Dip_Switch_Value = 0;
 
   //Error Code
   /* 1 = Alarm Pin Motor
@@ -132,7 +135,7 @@ public:
 
   bool Angle_Tollerance_Value = 0;  //1 = Angle in Tollerance; 0 = Angle outside Tollerance
 
-  int errorcode = 0;
+  long errorcode = 0;
 
 
   Closed_Loop_Step_Motor(Adafruit_MCP23X17 *GPIO_instance) {
@@ -145,7 +148,7 @@ public:
 
   //Methods
   //Method to configure the Motor Object. - Hardware Pin Mapping and DipSwitch Position
-  void setupMotor(bool MotorPos, int EnPin, int PullPin, int DirPin, int AlmPin, int PedPin, int RPM, int DipSwitch) {  //Motor Pin Configuration
+  void setupMotor(bool MotorPos, long EnPin, long PullPin, long DirPin, long AlmPin, long PedPin, long RPM, long DipSwitch) {  //Motor Pin Configuration
     Motor_Enable_Pin = EnPin;
     Motor_Pull_Pin = PullPin;
     Motor_Dir_Pin = DirPin;
@@ -204,15 +207,16 @@ public:
   bool startSurvilance() {
     //  If motor Alarm Pin is high -> alarm
     Motor_Alarm_Value = GPIO_I2C_Exp->digitalRead(Motor_Alarm_Pin);
-
+/*
     if (Motor_Alarm_Value == true) {
       Serial.println("ALARM");
       M5.lcd.println("ALARM");
       errorcode = 1;
-      return (0);
+      return (1);
     } else {
       return (1);
-    }
+    }*/
+    return (1);
   }
 
 
@@ -220,14 +224,14 @@ public:
 
     while (Angle >= 360) { Angle = Angle - 360; }
     //keeps Angle below 360°
-    if ((Motor_Position_Value == 1) and ((Angle <= 90) or (Angle >= 270))) {  //if motorposition is right / 90°=>x<=270°
+    if ((Motor_Position_Value == 1) and ((Angle <= 100) or (Angle >= 270))) {  //if motorposition is right / 90°=>x<=270°
       Old_Angle_Value = Angle;
       Serial.print("setOldAngleValue r ");
       Serial.println(Old_Angle_Value);
       M5.lcd.print("setOldAngleValue r ");
       M5.lcd.println(Old_Angle_Value);
       return (1);
-    } else if ((Motor_Position_Value == 0) and (Angle >= 90) and (Angle <= 270))  //if motorposition is left / 90°=<x<=270°
+    } else if ((Motor_Position_Value == 0) and (Angle >= 80) and (Angle <= 270))  //if motorposition is left / 90°=<x<=270°
     {
       Old_Angle_Value = Angle;
       Serial.print("setOldAngleValue l ");
@@ -251,16 +255,16 @@ public:
   bool setNewAngelValue(double Angle) {
 
     while (Angle >= 360) { Angle = Angle - 360; }                     //keeps Angle below 360°
-    if (Motor_Position_Value and (Angle <= 90) and (Angle >= 270)) {  //if motorposition is right / 90°=>x>=-90°
-      Angle = Angle + 90;
+    if (Motor_Position_Value and (Angle <= 100) and (Angle >= 270)) {  //if motorposition is right / 90°=>x>=-90°
+      Angle = Angle + 100;
       if (Angle >= 360) Angle = Angle - 360;  //if Angle between 270 and 360, it will be changed to a value between 0 and 90
-      New_Angle_Value = Angle - 90;           //Angle between 0 and 180, will be changed to a value between -90 and 90
+      New_Angle_Value = Angle - 100;           //Angle between 0 and 180, will be changed to a value between -90 and 90
       Serial.print("setNewAngleValue r ");
       Serial.println(New_Angle_Value);
       M5.lcd.print("setNewAngleValue r ");
       M5.lcd.println(New_Angle_Value);
       return (1);
-    } else if (!Motor_Position_Value and (Angle >= 90) and (Angle <= 270))  //if motorposition is left / 90°=<x<=270°
+    } else if (!Motor_Position_Value and (Angle >= 80) and (Angle <= 270))  //if motorposition is left / 90°=<x<=270°
     {
       New_Angle_Value = Angle;  //
       Serial.print("setNewAngleValue l ");
@@ -282,7 +286,7 @@ public:
 
   //MotorMovement Methodes
   bool moveOneStep(bool direction) {
-    long int counter = 0;
+    long long counter = 0;
 
     if (startSurvilance()) {
       GPIO_I2C_Exp->digitalWrite(Motor_Dir_Pin, direction);  //set direction 1= right 0 =left
@@ -292,7 +296,7 @@ public:
       GPIO_I2C_Exp->digitalWrite(Motor_Pull_Pin, 0);
 
       // maybe needs to be an Interupt
-    /*  do {
+      /*  do {
         Motor_Ped_Value = GPIO_I2C_Exp->digitalRead(Motor_Ped_Pin);
         counter++;
         //               Serial.print(" Motor_Ped_Pin: ");
@@ -396,22 +400,27 @@ public:
         if ((us_timer_value) < (micros() - us_timer_start)) {
           us_timer_state = 0;
 
-
-          // Serial.print(" us_timer_value: ");
-          //      Serial.print(us_timer_value);
-          //      Serial.print(" < ");
-          //   Serial.println(micros() - us_timer_start);
+/*
+           Serial.print(" us_timer_value: ");
+                Serial.print(us_timer_value);
+                Serial.print(" < ");
+            Serial.print(micros() - us_timer_start);*/
 
 
           Step_Time_Value = (micros() - us_timer_start) / 1000;
-          /*        Serial.print(" StepTime: ");
-          Serial.println(Step_Time_Value);
+           /*      Serial.print(" StepTime: ");
+          Serial.print(Step_Time_Value);
 
           M5.lcd.print(" StepTime: ");
-          M5.lcd.println(Step_Time_Value);
+          M5.lcd.print(Step_Time_Value);*/
        
-*/
-          if ((Step_Time_Value) >= (us_timer_value / 990)) errorcode = 5;
+          if ((Step_Time_Value) >= (us_timer_value / 800)) errorcode = 5;
+          else{errorcode = 0; }
+         /*
+                           Serial.print(" >= ");
+          Serial.println((us_timer_value / 800));*/
+
+
 
           us_timer_state = 0;
           // disableMotor();
@@ -430,7 +439,7 @@ class Motor_Movement_Calc {
 private:
   double Steps_Per_Rev = 0;
   double Angle_Per_Step = 0;
-  double Angle_Per_StepB =0;
+  double Angle_Per_StepB = 0;
 
 
 public:
@@ -441,14 +450,14 @@ public:
   double Min_Resolution_Value = 0;
   double Time_PerStep_Value = 0;
   double Max_Work_Time = 0;
-  unsigned int X1_Origin_Value = 0;
-  unsigned int Y1_Origin_Value = 0;
+  unsigned long X1_Origin_Value = 0;
+  unsigned long Y1_Origin_Value = 0;
 
-  unsigned int X2_Target_Value = 0;
-  unsigned int Y2_Target_Value = 0;
+  unsigned long X2_Target_Value = 0;
+  unsigned long Y2_Target_Value = 0;
 
-  unsigned int Xz_NextStep_Value = 0;
-  unsigned int Yz_NextStep_Value = 0;
+  unsigned long Xz_NextStep_Value = 0;
+  unsigned long Yz_NextStep_Value = 0;
 
   double Length_ofWay_Value = 0;      // The distance between Point A and B
   double Length_BaseToTip_Value = 0;  // The distance from the axis of the arm to the tip of the pen
@@ -458,7 +467,7 @@ public:
 
     Steps_Per_Rev = StPerRot;
     Angle_Per_Step = AngPerStp;
-    Angle_Per_StepB = DEG_TO_RAD*Angle_Per_Step;
+    Angle_Per_StepB = DEG_TO_RAD * Angle_Per_Step;  //Angle per Step in Radiants
     Length_BaseToTip_Value = LArm;
 
     Serial.print(" sI: Steps_Per_Rev: ");
@@ -468,6 +477,7 @@ public:
     Serial.print(" Length_BaseToTip_Value ");
     Serial.print(Length_BaseToTip_Value);
 
+    //calculate the minimum resolution per step depending on the minimum Angle and the length of the Robot Arm
     MinR_Value = (Length_BaseToTip_Value * Length_BaseToTip_Value + Length_BaseToTip_Value * Length_BaseToTip_Value - 2 * Length_BaseToTip_Value * Length_BaseToTip_Value * cos(Angle_Per_StepB));
     if (MinR_Value <= 0) MinR_Value *(-1);  //Make sure value is not <0
     Min_Resolution_Value = sqrt(MinR_Value);
@@ -476,6 +486,7 @@ public:
     Serial.println(Min_Resolution_Value);
   }
 
+  //set the origin coordinates og the robot arm
   void setOriginCoordinates(unsigned long X1, unsigned long Y1) {
     X1_Origin_Value = X1;
     Y1_Origin_Value = Y1;
@@ -511,45 +522,46 @@ public:
 
     Serial.print(" sDS: Done_Steps_Value ");
     Serial.print(Done_Steps_Value);
-     }
+  }
 
   void Interpolate() {
-      double LoW_Value = 0;
-      double Q_Value = 0;
+    double LoW_Value = 0;
+    double Q_Value = 0;
 
 
-      if (Done_Steps_Value == 0) {  // Calculations once per Interpolate session
-        LoW_Value = (Y2_Target_Value - Y1_Origin_Value) * (Y2_Target_Value - Y1_Origin_Value);
-        if (LoW_Value <= 0) LoW_Value *(-1);  //Make sure value is not <0
-        Length_ofWay_Value = sqrt(LoW_Value); //if it is 0 then there is nothing to do
-        if(Length_ofWay_Value == 0)TotalNof_Steps_Value = 0; //Number of Steps is also gona be 0
-        else{TotalNof_Steps_Value = Length_ofWay_Value / Min_Resolution_Value ;     
-        
+    if (Done_Steps_Value == 0) {  // Calculations once per Interpolate session
+      LoW_Value = (Y2_Target_Value - Y1_Origin_Value) * (Y2_Target_Value - Y1_Origin_Value);
+      if (LoW_Value <= 0) LoW_Value *(-1);                    //Make sure value is not <0
+      Length_ofWay_Value = sqrt(LoW_Value);                   //if it is 0 then there is nothing to do
+      if (Length_ofWay_Value == 0) TotalNof_Steps_Value = 0;  //Number of Steps is also gona be 0
+      else {
+        TotalNof_Steps_Value = Length_ofWay_Value / Min_Resolution_Value;
+
 
         Serial.print(" Ib: TotalNof_Steps_Value ");
         Serial.print(TotalNof_Steps_Value);
-         Serial.print(" = Min_Res:  ");
+        Serial.print(" = Min_Res:  ");
         Serial.print(Min_Resolution_Value);
-         Serial.print(" / ");
+        Serial.print(" / ");
         Serial.print(Length_ofWay_Value);
-         Serial.println("mm ");
-        }
+        Serial.println("mm ");
       }
-      //interpolation
-      if ((Done_Steps_Value <= TotalNof_Steps_Value)and (TotalNof_Steps_Value >0)) {
-        //calculate Q Value
+    }
+    //interpolation
+    if ((Done_Steps_Value <= TotalNof_Steps_Value) and (TotalNof_Steps_Value > 0)) {
+      //calculate Q Value
 
 
-        Q_Value = Done_Steps_Value / (TotalNof_Steps_Value*1.00);
-        /*Serial.print(" Ic: Q_Value = ");
+      Q_Value = Done_Steps_Value / (TotalNof_Steps_Value * 1.00);
+      /*Serial.print(" Ic: Q_Value = ");
         Serial.print( Done_Steps_Value);
         Serial.print(" / ");
         Serial.println(TotalNof_Steps_Value);*/
-        
 
-        Xz_NextStep_Value = ((1 - Q_Value) * X1_Origin_Value) + (Q_Value * X2_Target_Value);
-        Yz_NextStep_Value = ((1 - Q_Value) * Y1_Origin_Value) + (Q_Value * Y2_Target_Value);
-        /*
+
+      Xz_NextStep_Value = ((1 - Q_Value) * X1_Origin_Value) + (Q_Value * X2_Target_Value);
+      Yz_NextStep_Value = ((1 - Q_Value) * Y1_Origin_Value) + (Q_Value * Y2_Target_Value);
+      /*
         Serial.println(" Ic: Xz_NextStep_Value = ((1 - Q_Value) * X1_Origin_Value) + (Q_Value * X2_Target_Value);");
         Serial.print(" ((");
         Serial.print(1);
@@ -564,46 +576,274 @@ public:
         Serial.println(" ) ");
 */
 
-        Serial.print(" Ic: Xz_NextStep_Value ");
-        Serial.print(Xz_NextStep_Value);
-        Serial.print(" Yz_NextStep_Value ");
-        Serial.print(Yz_NextStep_Value);
-        Serial.print(" Done_Steps_Value ");
-        Serial.print(Done_Steps_Value);
-        Serial.print(" <= ");
-        Serial.println(TotalNof_Steps_Value);
+      Serial.print(" Ic: Xz_NextStep_Value ");
+      Serial.print(Xz_NextStep_Value);
+      Serial.print(" Yz_NextStep_Value ");
+      Serial.print(Yz_NextStep_Value);
+      Serial.print(" Done_Steps_Value ");
+      Serial.print(Done_Steps_Value);
+      Serial.print(" <= ");
+      Serial.println(TotalNof_Steps_Value);
 
-        Done_Steps_Value++;
+      Done_Steps_Value++;
 
-//interpolation finished
-      } else if ((Done_Steps_Value >= TotalNof_Steps_Value)and (TotalNof_Steps_Value >0)) {
+      //interpolation finished
+    } else if ((Done_Steps_Value >= TotalNof_Steps_Value) and (TotalNof_Steps_Value > 0)) {
 
-        Serial.print(" Id: Xz_NextStep_Value: ");
-        Serial.print(Xz_NextStep_Value);
-        Serial.print(" Yz_NextStep_Value ");
-        Serial.println(Yz_NextStep_Value);
-        Serial.print(" Id: X2_Target_Value  : ");
-        Serial.print(X2_Target_Value);
-        Serial.print(" Y2_Target_Value  : ");
-        Serial.println(Y2_Target_Value);
+      Serial.print(" Id: Xz_NextStep_Value: ");
+      Serial.print(Xz_NextStep_Value);
+      Serial.print(" Yz_NextStep_Value ");
+      Serial.println(Yz_NextStep_Value);
+      Serial.print(" Id: X2_Target_Value  : ");
+      Serial.print(X2_Target_Value);
+      Serial.print(" Y2_Target_Value  : ");
+      Serial.println(Y2_Target_Value);
 
-        Y1_Origin_Value = Yz_NextStep_Value;
-        X1_Origin_Value = Xz_NextStep_Value;
+      Y1_Origin_Value = Yz_NextStep_Value;
+      X1_Origin_Value = Xz_NextStep_Value;
 
-        Serial.print(" Id: X1_Origin_Value  : ");
-        Serial.print(X1_Origin_Value);
-        Serial.print(" Y1_Origin_Value  : ");
-        Serial.println(Y1_Origin_Value);
+      Serial.print(" Id: X1_Origin_Value  : ");
+      Serial.print(X1_Origin_Value);
+      Serial.print(" Y1_Origin_Value  : ");
+      Serial.println(Y1_Origin_Value);
 
-        Done_Steps_Value = 0;
-        Length_ofWay_Value = 0;
+      Done_Steps_Value = 0;
+      Length_ofWay_Value = 0;
 
-        Serial.println(" Finished Interpolate ");
+      Serial.println(" Finished Interpolate ");
 
-      } else {
-        Serial.println(" Int: no Change ");
-      }
+    } else {
+      Serial.println(" long: no Change ");
     }
-  };
+  }
+};
+
+class Delta2D_Kinematic {
+private:
+  //the linear slope between the intersection of the two circles
+  //G=K1-K2
+  //G: y=mx+b -> Intersection_I1_Y  = Line_S1S2_m * Intersection_I1_X + Line_S1S2_b
+  // insert y into K1
+  //solve the quadratic equation for x
+  double Line_S1S2_b = 0;
+  double Line_S1S2_m = 0;
+
+
+  //Static Roboter Parameters in mm
+  unsigned long Lenght_UpArm_Value = 0;   //length of the Left Upper Arm in mm
+  unsigned long Lenght_LowArm_Value = 0;  //length of the Left Lower Arm in mm
+
+  unsigned long MeetingPoint_TipPoint_Value = 0;  //length between tip of the tool and meeting point of arms
+  double MeetingPoint_TipPoint_AngleValue = 0;    //Angle of the line between Meetingpoint to tip of the tool
+  unsigned long DeltaX_LeftArm_Value = 0;         //Delta X from center to rotation point of the Left Arm
+  unsigned long DeltaX_RightArm_Value = 0;        //Delta X from center to rotation point of the Right Arm
+  double Transmission_LeftArm_Value = 0;
+  double Transmission_RightArm_Value = 0;
+
+
+public:
+  double Circle1_Middle_X = 0;  // Middle Point coordianetes X of Circle 1
+  double Circle1_Middle_Y = 0;  // Middle Point coordianetes Y of Circle 1
+  double Circle2_Middle_X = 0;  // Middle Point coordianetes X of Circle 2
+  double Circle2_Middle_Y = 0;  // Middle Point coordianetes Y of Circle 2
+
+  double Intersection_I1_X = 0;  //Intersection S1
+  double Intersection_I1_Y = 0;  //Intersection S1
+  double Intersection_I2_X = 0;  //Intersection S2
+  double Intersection_I2_Y = 0;  //Intersection S2
+
+  double angle_LeftArm_Value1 = 0;
+  double angle_LeftArm_Value2 = 0;
+  double angle_RightArm_Value1 = 0;
+  double angle_RightArm_Value2 = 0;
+
+
+  //Methodes:
+
+  void setupDelta2D_Kinematic(
+    unsigned long LUArm,
+    unsigned long LLArm,
+    unsigned long MPTipP,
+    double MPTipPAngle,
+    unsigned long DXLArm,
+    unsigned long DXRArm,
+    double TransLArm,
+    double TransRArm) {
+    Lenght_UpArm_Value = LUArm;   //length of the Left Upper Arm in mm
+    Lenght_LowArm_Value = LLArm;  //length of the Left Lower Arm in mm
+
+    MeetingPoint_TipPoint_Value = MPTipP;            //length between tip of the tool and meeting point of arms
+    MeetingPoint_TipPoint_AngleValue = MPTipPAngle;  //Angle of the line between Meetingpoint to tip of the tool
+    DeltaX_LeftArm_Value = DXLArm;                   //Delta X from center to rotation point of the Left Arm
+    DeltaX_RightArm_Value = DXRArm;                  //Delta X from center to rotation point of the Right Arm
+    Transmission_LeftArm_Value = TransLArm;
+    Transmission_RightArm_Value = TransRArm;
+
+    Serial.print(" Setup: L_UpArm_Value: ");
+    Serial.print(Lenght_UpArm_Value);
+    Serial.print(" L_LowArm_Value: ");
+    Serial.println(Lenght_LowArm_Value);
+    Serial.print(" R_UpArm_Value ");
+    Serial.print(MeetingPoint_TipPoint_Value);
+    Serial.print(" MeetingPoint_TipPoint_AngleValue ");
+    Serial.println(MeetingPoint_TipPoint_AngleValue);
+    Serial.print(" DeltaX_LeftArm_Value ");
+    Serial.print(DeltaX_LeftArm_Value);
+    Serial.print(" DeltaX_RightArm_Value  ");
+    Serial.println(DeltaX_RightArm_Value);
+    Serial.print(" Transmission_LeftArm_Value ");
+    Serial.print(Transmission_LeftArm_Value);
+    Serial.print(" Transmission_RightArm_Value  ");
+    Serial.println(Transmission_RightArm_Value);
+  }
+
+  unsigned long IntersectionOfTwoCircles(unsigned long C1MX, unsigned long C1MY, unsigned long C2MX, unsigned long C2MY) {  //Calculate the intersection of two circles
+    //1.Step: G = K1-K2
+    // Gerade zw. den Kreisschnittpunkten
+    // G=K1-K2
+    // G: y=mx+b
+    // y in K1 einsetzen
+    // Quadratische Gleichung nach X auflösen
+    double p = 0;
+    double q = 0;
+    double discriminant_2Circle_Value = 0;
+    double pStack = 0;
+    Circle1_Middle_X = C1MX * 1.00;  // Middle Point coordianetes X of Circle 1 (Drehgelenk Schulterachse)
+    Circle1_Middle_Y = C1MY * 1.00;  // Middle Point coordianetes Y of Circle 1 (Drehgelenk Schulterachse)
+    Circle2_Middle_X = C2MX * 1.00;  // Middle Point coordianetes X of Circle 2 (Koordinaten von Stift)
+    Circle2_Middle_Y = C2MY * 1.00;  // Middle Point coordianetes Y of Circle 2 (Koordinaten von Stift)
+
+    // y=mx+b
+    Line_S1S2_m = (Circle1_Middle_X * 1.00 - Circle2_Middle_X * 1.00) / ((Circle2_Middle_Y * 1.00 - Circle1_Middle_Y * 1.00));
+    Line_S1S2_b = (Lenght_LowArm_Value * Lenght_LowArm_Value - Lenght_UpArm_Value * Lenght_UpArm_Value + Circle2_Middle_Y * Circle2_Middle_Y - Circle1_Middle_Y * Circle1_Middle_Y + Circle2_Middle_X * Circle2_Middle_X - Circle1_Middle_X * Circle1_Middle_X) / (2.00 * (Circle2_Middle_Y - Circle1_Middle_Y));
+
+    Serial.print(" Line_S1S2_m  ");
+    Serial.print(Line_S1S2_m);
+    Serial.print("= ");
+    Serial.print(Circle1_Middle_X);
+    Serial.print(" - ");
+    Serial.print(Circle2_Middle_X);
+    Serial.print(" / ");
+    Serial.print(Circle2_Middle_Y);
+    Serial.print(" - ");
+    Serial.print(Circle1_Middle_Y);
+
+
+    Serial.print(" Line_S1S2_b ");
+    Serial.print(Line_S1S2_b);
+    Serial.print(" = ");
+    Serial.print(Lenght_LowArm_Value * Lenght_LowArm_Value);
+    Serial.print("- ");
+    Serial.print(Lenght_UpArm_Value * Lenght_UpArm_Value);
+    Serial.print(" + ");
+    Serial.print(Circle2_Middle_Y * Circle2_Middle_Y);
+    Serial.print(" - ");
+    Serial.print(Circle1_Middle_Y * Circle1_Middle_Y);
+    Serial.print(" + ");
+    Serial.print(Circle2_Middle_Y * Circle2_Middle_Y);
+    Serial.print(" - ");
+    Serial.print(Circle1_Middle_X * Circle1_Middle_X);
+    Serial.print(") / (");
+    Serial.println((2.00 * (Circle2_Middle_Y - Circle1_Middle_Y)));
+
+
+
+    // Quadratische Gleichung der Form x^2+px+q=0
+
+    pStack = (-Circle1_Middle_X + Line_S1S2_m * (Line_S1S2_b - Circle1_Middle_Y));
+
+    p = 2 * pStack / (1 + Line_S1S2_m * Line_S1S2_m);
+    Serial.print(p);
+    Serial.print(" p =2 *");
+    Serial.print(pStack);
+    Serial.print(" / ");
+    Serial.println((1 + Line_S1S2_m * Line_S1S2_m));
+
+
+    q = (Circle1_Middle_X * Circle1_Middle_X + (Line_S1S2_b - Circle1_Middle_Y) * (Line_S1S2_b - Circle1_Middle_Y) - Lenght_UpArm_Value * Lenght_UpArm_Value) / (1 + Line_S1S2_m * Line_S1S2_m);
+
+    Serial.print(q);
+    Serial.print(" q =");
+    Serial.print(Circle1_Middle_X * Circle1_Middle_X);
+    Serial.print(" + ");
+    Serial.print(Line_S1S2_b - Circle1_Middle_Y);
+    Serial.print(" - ");
+    Serial.print(Lenght_LowArm_Value * Lenght_LowArm_Value);
+    Serial.print(" / ");
+
+    Serial.println(1 + Line_S1S2_m * Line_S1S2_m);
+
+
+    discriminant_2Circle_Value = p * p / 4 - q;
+
+    Serial.print(" discriminant_2Circle_Value = p*p/4-q;");
+    Serial.println(discriminant_2Circle_Value);
+
+    if (discriminant_2Circle_Value >= 0) {
+      Intersection_I1_X = (-p / 2) + sqrt(discriminant_2Circle_Value);
+
+      Serial.print(" Intersection_I1_X: ");
+      Serial.print(-p / 2);
+      Serial.print(" + ");
+      Serial.print(" sqrt(discriminant_2Circle_Value)");
+
+      Intersection_I2_X = (-p / 2) - sqrt(discriminant_2Circle_Value);
+      // Y=mx+b, Res_X1 und Res_X2 einsetzen
+      Intersection_I1_Y = Line_S1S2_m * Intersection_I1_X + Line_S1S2_b;
+      Intersection_I2_Y = Line_S1S2_m * Intersection_I2_X + Line_S1S2_b;
+    }
+    if (discriminant_2Circle_Value > 0) return 2;
+    if (discriminant_2Circle_Value == 0) return 1;
+    if (discriminant_2Circle_Value < 0) return 0;
+
+    //delay(1000);
+  }
+
+  void InverseKinematic(bool WhichArm)  //Left Arm = 0, Right Arm = 1
+  {
+
+    if (WhichArm == right_Arm) {
+      Serial.println(" Inverse Kinematic calculate right Arm Angle  ");
+
+      angle_RightArm_Value1 = RAD_TO_DEG * atan2((Intersection_I1_Y - 0.00) * 1.00, (Intersection_I1_X - DeltaX_RightArm_Value) * 1.00);
+      Serial.print(angle_RightArm_Value1);
+      Serial.print(" =  atan2(");
+      Serial.print((Intersection_I1_Y - 0.00) * 1.00);
+      Serial.print("/");
+      Serial.print((Intersection_I1_X - DeltaX_RightArm_Value) * 1.00);
+      Serial.println(")");
+
+
+      angle_RightArm_Value2 = RAD_TO_DEG * atan2((Intersection_I2_Y - 0.00) * 1.00, (Intersection_I2_X - DeltaX_RightArm_Value) * 1.00);
+      Serial.print(angle_RightArm_Value2);
+      Serial.print(" =  atan2(");
+      Serial.print((Intersection_I2_Y - 0.00) * 1.00);
+      Serial.print("/");
+      Serial.print((Intersection_I2_X - DeltaX_RightArm_Value) * 1.00);
+      Serial.println(")");
+    }
+
+    if (WhichArm == left_Arm) {
+      Serial.println(" Inverse Kinematic calculate left Arm Angle  ");
+
+      angle_RightArm_Value1 = RAD_TO_DEG * atan2((Intersection_I1_Y - 0.00) * 1.00, (Intersection_I1_X - DeltaX_LeftArm_Value) * 1.00);
+      Serial.print(angle_RightArm_Value1);
+      Serial.print(" =  atan2(");
+      Serial.print((Intersection_I1_Y - 0.00) * 1.00);
+      Serial.print("/");
+      Serial.print((Intersection_I1_X - DeltaX_LeftArm_Value) * 1.00);
+      Serial.println(")");
+
+
+      angle_LeftArm_Value2 = RAD_TO_DEG * atan2((Intersection_I2_Y - 0.00) * 1.00, (Intersection_I2_X - DeltaX_LeftArm_Value) * 1.00);
+      Serial.print(angle_LeftArm_Value2);
+      Serial.print(" =  atan2(");
+      Serial.print((Intersection_I2_Y - 0.00) * 1.00);
+      Serial.print("/");
+      Serial.print((Intersection_I2_X - DeltaX_LeftArm_Value) * 1.00);
+      Serial.println(")");
+    }
+  }
+};
 
 #endif
