@@ -255,10 +255,10 @@ public:
   bool setNewAngelValue(double Angle) {
 
     while (Angle >= 360) { Angle = Angle - 360; }                     //keeps Angle below 360°
-    if (Motor_Position_Value and (Angle <= 100) and (Angle >= 270)) {  //if motorposition is right / 90°=>x>=-90°
-      Angle = Angle + 100;
+    if ((Motor_Position_Value and (Angle <= 120)) or (Motor_Position_Value and (Angle >= 270))) {  //if motorposition is right / 90°=>x>=-90°
+      Angle = Angle + 120;
       if (Angle >= 360) Angle = Angle - 360;  //if Angle between 270 and 360, it will be changed to a value between 0 and 90
-      New_Angle_Value = Angle - 100;           //Angle between 0 and 180, will be changed to a value between -90 and 90
+      New_Angle_Value = Angle - 120;           //Angle between 0 and 180, will be changed to a value between -90 and 90
       Serial.print("setNewAngleValue r ");
       Serial.println(New_Angle_Value);
       M5.lcd.print("setNewAngleValue r ");
@@ -683,17 +683,17 @@ public:
     Serial.print(Lenght_UpArm_Value);
     Serial.print(" L_LowArm_Value: ");
     Serial.println(Lenght_LowArm_Value);
-    Serial.print(" R_UpArm_Value ");
+    Serial.print(" R_UpArm_Value: ");
     Serial.print(MeetingPoint_TipPoint_Value);
-    Serial.print(" MeetingPoint_TipPoint_AngleValue ");
+    Serial.print(" MeetingPoint_TipPoint_AngleValue: ");
     Serial.println(MeetingPoint_TipPoint_AngleValue);
-    Serial.print(" DeltaX_LeftArm_Value ");
+    Serial.print(" DeltaX_LeftArm_Value: ");
     Serial.print(DeltaX_LeftArm_Value);
-    Serial.print(" DeltaX_RightArm_Value  ");
+    Serial.print(" DeltaX_RightArm_Value:  ");
     Serial.println(DeltaX_RightArm_Value);
-    Serial.print(" Transmission_LeftArm_Value ");
+    Serial.print(" Transmission_LeftArm_Value: ");
     Serial.print(Transmission_LeftArm_Value);
-    Serial.print(" Transmission_RightArm_Value  ");
+    Serial.print(" Transmission_RightArm_Value:  ");
     Serial.println(Transmission_RightArm_Value);
   }
 
@@ -708,29 +708,69 @@ public:
     double q = 0;
     double discriminant_2Circle_Value = 0;
     double pStack = 0;
+    double UpArm2;
+      double LowArm2, X2,X1,Y1,Y2,Y2x2;
     Circle1_Middle_X = C1MX * 1.00;  // Middle Point coordianetes X of Circle 1 (Drehgelenk Schulterachse)
     Circle1_Middle_Y = C1MY * 1.00;  // Middle Point coordianetes Y of Circle 1 (Drehgelenk Schulterachse)
     Circle2_Middle_X = C2MX * 1.00;  // Middle Point coordianetes X of Circle 2 (Koordinaten von Stift)
     Circle2_Middle_Y = C2MY * 1.00;  // Middle Point coordianetes Y of Circle 2 (Koordinaten von Stift)
 
+Serial.print("Io2C: 1 Circle Middle: X  ");
+  Serial.print(Circle1_Middle_X);
+  Serial.print(" Y: ");
+Serial.print(Circle1_Middle_Y);
+Serial.print(" 2 Circle Middle: X  ");
+Serial.print(Circle2_Middle_X);
+Serial.print(" Y: ");
+Serial.println(Circle2_Middle_Y);
+
     // y=mx+b
     Line_S1S2_m = (Circle1_Middle_X * 1.00 - Circle2_Middle_X * 1.00) / ((Circle2_Middle_Y * 1.00 - Circle1_Middle_Y * 1.00));
-    Line_S1S2_b = (Lenght_LowArm_Value * Lenght_LowArm_Value - Lenght_UpArm_Value * Lenght_UpArm_Value + Circle2_Middle_Y * Circle2_Middle_Y - Circle1_Middle_Y * Circle1_Middle_Y + Circle2_Middle_X * Circle2_Middle_X - Circle1_Middle_X * Circle1_Middle_X) / (2.00 * (Circle2_Middle_Y - Circle1_Middle_Y));
+    
+    UpArm2 = Lenght_UpArm_Value * Lenght_UpArm_Value*1.00;
+    Serial.print(" UpArm2 ");
+    Serial.print(UpArm2);
 
-    Serial.print(" Line_S1S2_m  ");
-    Serial.print(Line_S1S2_m);
-    Serial.print("= ");
+    LowArm2=Lenght_LowArm_Value * Lenght_LowArm_Value;
+    Serial.print(" LowArm2 ");
+    Serial.print(LowArm2);
+
+    Y2=Circle2_Middle_Y * Circle2_Middle_Y;
+        Serial.print(" Y2 ");
+    Serial.print(Y2);
+
+    Y1=Circle1_Middle_Y * Circle1_Middle_Y;
+        Serial.print(" Y1 ");
+    Serial.print(Y1);
+
+    X2=Circle2_Middle_X * Circle2_Middle_X; 
+        Serial.print(" X2 ");
+    Serial.print(X2);
+
+    X1=Circle1_Middle_X * Circle1_Middle_X;
+        Serial.print(" X1: ");
+    Serial.print(X1);
+    
+         Serial.print("( Circle1_Middle_X: ");
     Serial.print(Circle1_Middle_X);
-    Serial.print(" - ");
-    Serial.print(Circle2_Middle_X);
-    Serial.print(" / ");
-    Serial.print(Circle2_Middle_Y);
-    Serial.print(" - ");
-    Serial.print(Circle1_Middle_Y);
+
+    Y2x2=2.00 * (Circle2_Middle_Y - Circle1_Middle_Y);
+
+     Serial.print(")/ Y2x2 ");
+    Serial.println(Y2x2);
+
+     Serial.print("(UpArm2 - LowArm2 + Y2 - Y1 + X2 - X1): ");
+    Serial.println((UpArm2 - LowArm2 + Y2 - Y1 + X2 - X1));
 
 
-    Serial.print(" Line_S1S2_b ");
-    Serial.print(Line_S1S2_b);
+    Line_S1S2_b = (UpArm2 - LowArm2 + Y2 - Y1 + X2 - X1) / (2.00 * (Circle2_Middle_Y - Circle1_Middle_Y));
+
+    Serial.print("Io2C: y=mx+b:  ");
+
+    Serial.print(" y= ");
+    Serial.print(Line_S1S2_m);
+    Serial.print(" * x +");
+    Serial.println(Line_S1S2_b);/*
     Serial.print(" = ");
     Serial.print(Lenght_LowArm_Value * Lenght_LowArm_Value);
     Serial.print("- ");
@@ -744,7 +784,7 @@ public:
     Serial.print(" - ");
     Serial.print(Circle1_Middle_X * Circle1_Middle_X);
     Serial.print(") / (");
-    Serial.println((2.00 * (Circle2_Middle_Y - Circle1_Middle_Y)));
+    Serial.println((2.00 * (Circle2_Middle_Y - Circle1_Middle_Y)));*/
 
 
 
@@ -753,8 +793,9 @@ public:
     pStack = (-Circle1_Middle_X + Line_S1S2_m * (Line_S1S2_b - Circle1_Middle_Y));
 
     p = 2 * pStack / (1 + Line_S1S2_m * Line_S1S2_m);
+    Serial.print("Io2C: p: ");
     Serial.print(p);
-    Serial.print(" p =2 *");
+    Serial.print(" = 2 *");
     Serial.print(pStack);
     Serial.print(" / ");
     Serial.println((1 + Line_S1S2_m * Line_S1S2_m));
@@ -762,8 +803,10 @@ public:
 
     q = (Circle1_Middle_X * Circle1_Middle_X + (Line_S1S2_b - Circle1_Middle_Y) * (Line_S1S2_b - Circle1_Middle_Y) - Lenght_UpArm_Value * Lenght_UpArm_Value) / (1 + Line_S1S2_m * Line_S1S2_m);
 
+    
+    Serial.print("Io2C: q = ");
     Serial.print(q);
-    Serial.print(" q =");
+    Serial.print(" = ");
     Serial.print(Circle1_Middle_X * Circle1_Middle_X);
     Serial.print(" + ");
     Serial.print(Line_S1S2_b - Circle1_Middle_Y);
@@ -776,21 +819,28 @@ public:
 
     discriminant_2Circle_Value = p * p / 4 - q;
 
-    Serial.print(" discriminant_2Circle_Value = p*p/4-q;");
+    Serial.print("Io2C: discriminant: p*p/4-q = ");
     Serial.println(discriminant_2Circle_Value);
 
     if (discriminant_2Circle_Value >= 0) {
       Intersection_I1_X = (-p / 2) + sqrt(discriminant_2Circle_Value);
-
-      Serial.print(" Intersection_I1_X: ");
-      Serial.print(-p / 2);
-      Serial.print(" + ");
-      Serial.print(" sqrt(discriminant_2Circle_Value)");
-
       Intersection_I2_X = (-p / 2) - sqrt(discriminant_2Circle_Value);
+
+      Serial.print("Io2C: Intersection_I1_X: ");
+      Serial.print(Intersection_I1_X);
+      Serial.print(" Intersection_I2_X: ");
+      Serial.println(Intersection_I2_X);
+
+      
       // Y=mx+b, Res_X1 und Res_X2 einsetzen
       Intersection_I1_Y = Line_S1S2_m * Intersection_I1_X + Line_S1S2_b;
       Intersection_I2_Y = Line_S1S2_m * Intersection_I2_X + Line_S1S2_b;
+      
+      Serial.print("Io2C: Intersection_I1_Y: ");
+      Serial.print(Intersection_I1_Y);
+      Serial.print(" Intersection_I2_Y: ");
+      Serial.println(Intersection_I2_Y);
+
     }
     if (discriminant_2Circle_Value > 0) return 2;
     if (discriminant_2Circle_Value == 0) return 1;
@@ -803,18 +853,25 @@ public:
   {
 
     if (WhichArm == right_Arm) {
-      Serial.println(" Inverse Kinematic calculate right Arm Angle  ");
+      Serial.println("IK: Inverse Kinematic right Arm Angle  ");
 
-      angle_RightArm_Value1 = RAD_TO_DEG * atan2((Intersection_I1_Y - 0.00) * 1.00, (Intersection_I1_X - DeltaX_RightArm_Value) * 1.00);
+      angle_RightArm_Value1 = RAD_TO_DEG * atan2((Intersection_I1_Y - 0.00) * 1.00, (Intersection_I1_X - DeltaX_RightArm_Value* 1.00) );
+      if(angle_RightArm_Value1<0)angle_RightArm_Value1=360+angle_RightArm_Value1;//calculating the positiv angle
+            
+      Serial.print("IK: 1RightArm°: ");
       Serial.print(angle_RightArm_Value1);
       Serial.print(" =  atan2(");
       Serial.print((Intersection_I1_Y - 0.00) * 1.00);
       Serial.print("/");
       Serial.print((Intersection_I1_X - DeltaX_RightArm_Value) * 1.00);
-      Serial.println(")");
+      Serial.println(") ");
 
 
-      angle_RightArm_Value2 = RAD_TO_DEG * atan2((Intersection_I2_Y - 0.00) * 1.00, (Intersection_I2_X - DeltaX_RightArm_Value) * 1.00);
+      angle_RightArm_Value2 = RAD_TO_DEG * atan2((Intersection_I2_Y - 0.00) * 1.00, (Intersection_I2_X - DeltaX_RightArm_Value* 1.00) );
+      if(angle_RightArm_Value2<0)angle_RightArm_Value2=360+angle_RightArm_Value2;//calculating the positiv angle
+      
+      
+      Serial.print("IK: 2RightArm°: ");
       Serial.print(angle_RightArm_Value2);
       Serial.print(" =  atan2(");
       Serial.print((Intersection_I2_Y - 0.00) * 1.00);
@@ -824,18 +881,24 @@ public:
     }
 
     if (WhichArm == left_Arm) {
-      Serial.println(" Inverse Kinematic calculate left Arm Angle  ");
+      Serial.println("IK: Inverse Kinematic left Arm Angle  ");
 
-      angle_RightArm_Value1 = RAD_TO_DEG * atan2((Intersection_I1_Y - 0.00) * 1.00, (Intersection_I1_X - DeltaX_LeftArm_Value) * 1.00);
-      Serial.print(angle_RightArm_Value1);
+      angle_LeftArm_Value1 = RAD_TO_DEG * atan2((Intersection_I1_Y - 0.00) * 1.00, (Intersection_I1_X - DeltaX_LeftArm_Value* 1.00) );
+      if(angle_LeftArm_Value1<0)angle_LeftArm_Value1=360+angle_LeftArm_Value1;//calculating the positiv angle
+      
+       Serial.print("IK: 1LeftArm°: ");
+      Serial.print(angle_LeftArm_Value1);
       Serial.print(" =  atan2(");
       Serial.print((Intersection_I1_Y - 0.00) * 1.00);
       Serial.print("/");
       Serial.print((Intersection_I1_X - DeltaX_LeftArm_Value) * 1.00);
-      Serial.println(")");
+      Serial.println(") ");
 
 
-      angle_LeftArm_Value2 = RAD_TO_DEG * atan2((Intersection_I2_Y - 0.00) * 1.00, (Intersection_I2_X - DeltaX_LeftArm_Value) * 1.00);
+      angle_LeftArm_Value2 = RAD_TO_DEG * atan2((Intersection_I2_Y - 0.00) * 1.00, (Intersection_I2_X - DeltaX_LeftArm_Value* 1.00) );
+      if(angle_LeftArm_Value2<0)angle_LeftArm_Value2=360+angle_LeftArm_Value2;//calculating the positiv angle
+
+      Serial.print("IK: 2LeftArm°: ");
       Serial.print(angle_LeftArm_Value2);
       Serial.print(" =  atan2(");
       Serial.print((Intersection_I2_Y - 0.00) * 1.00);
