@@ -234,6 +234,30 @@ void moveToNewPositionRight() {
   counterTollerance = 0;
 }
 
+void moveToNewPosition() {
+  unsigned long counterTollerance = 0;
+  bool exitStep = false;
+
+  do {
+    //   Serial.print(" Number of Steps: ");
+    //   Serial.print(counterTollerance++);
+
+    do {  //do one step
+      if (Motor_Right_Ins.OneStepDir() == 0) exitStep = false;
+      else { exitStep = true; }
+      if (Motor_Right_Ins.errorcode > 0) exitStep = true;
+    } while (exitStep == false);
+        do {  //do one step
+      if (Motor_Left_Ins.OneStepDir() == 0) exitStep = false;
+      else { exitStep = true; }
+      if (Motor_Left_Ins.errorcode > 0) exitStep = true;
+    } while (exitStep == false);
+
+  } while (!Motor_Right_Ins.Angle_Tollerance_Value or !Motor_Left_Ins.Angle_Tollerance_Value);
+
+  counterTollerance = 0;
+}
+
 //=========| Funktionen StateMachine |=========================================*/
 
 
@@ -353,17 +377,11 @@ unsigned int Draw() {  //State 3
   unsigned long determinant_LeftArm_Value = 0;
 
   //delay(500);
-  Serial.println("S3: Robot is Calculationg Coordinates ");
-
   //1.Step: LED Blink,
   Motor_Left_Ins.test();  //Motor Class Test
 
-  //delay(100);
-  Serial.println("S3: Robot is Calculationg Route ");
-
   //2.Step:  set new target coordinates and start the interpolation:
   //test coordinates
-
   MM_Calc_Ins.Interpolate();
 
   //3.Step: Calculate new Angle to reach thos coordinates.
@@ -371,14 +389,13 @@ unsigned int Draw() {  //State 3
   determinant_RightArm_Value = D2D_RightArm_Kin.IntersectionOfTwoCircles(DeltaX_RightArm_Value, 0, MM_Calc_Ins.Xz_NextStep_Value, MM_Calc_Ins.Yz_NextStep_Value);
   if (determinant_RightArm_Value == 2) {
     D2D_RightArm_Kin.InverseKinematic(right_Arm);
-    Serial.print("S3: NewAngle 1 Right Arm:  ");
+ /*   Serial.print("S3: NewAngle 1 Right Arm:  ");
     Serial.println(D2D_RightArm_Kin.angle_RightArm_Value1);
     Serial.print("S3: NewAngle 2 Right Arm:  ");
-    Serial.println(D2D_RightArm_Kin.angle_RightArm_Value2);
+    Serial.println(D2D_RightArm_Kin.angle_RightArm_Value2);*/
   }
 
   else {
-
     Serial.print("S3: Kinematic Error Right:  ");
     Serial.println(determinant_RightArm_Value);
   }
@@ -387,40 +404,32 @@ unsigned int Draw() {  //State 3
   determinant_LeftArm_Value = D2D_LeftArm_Kin.IntersectionOfTwoCircles(DeltaX_LeftArm_Value, 0, MM_Calc_Ins.Xz_NextStep_Value, MM_Calc_Ins.Yz_NextStep_Value);
   if (determinant_LeftArm_Value == 2) {
     D2D_LeftArm_Kin.InverseKinematic(left_Arm);
-    Serial.print("S3: NewAngle 1 Left Arm:  ");
+ /*   Serial.print("S3: NewAngle 1 Left Arm:  ");
     Serial.println(D2D_LeftArm_Kin.angle_LeftArm_Value1);
     Serial.print("S3: NewAngle 2 Left Arm:  ");
-    Serial.println(D2D_LeftArm_Kin.angle_LeftArm_Value2);
+    Serial.println(D2D_LeftArm_Kin.angle_LeftArm_Value2);*/
   }
 
-
   else {
-
     Serial.print("S3: Kinematic Error Left:  ");
     Serial.println(determinant_LeftArm_Value);
   }
 
-
   //4.Step:  set new angle
-    Serial.print("S3: Set Angle Left:  ");
-  Serial.println(D2D_LeftArm_Kin.angle_RightArm_Value2);
+
   if (Motor_Left_Ins.setNewAngelValue(D2D_LeftArm_Kin.angle_LeftArm_Value2)) Serial.println("Motor Left Set Angle: Succeed");
   else {
     Serial.println("S3: Motor Left Set Angle: Failed");
     return (5);
   }
-  
-  Serial.print("S3: Set Angle Right:  ");
-  Serial.println(D2D_RightArm_Kin.angle_RightArm_Value1);
+
     if (Motor_Right_Ins.setNewAngelValue(D2D_RightArm_Kin.angle_RightArm_Value1)) Serial.println("Motor Right Set Angle: Succeed");
   else {
     Serial.println("S3: Motor Right Set Angle: Failed");
     return (5);
   }
 
-
-  Serial.println("S3: Robot is drawing ");/*
-  Serial.print("S3: Old Left Angle: ");
+/*  Serial.print("S3: Old Left Angle: ");
   Serial.println(Motor_Left_Ins.getOldAngelValue());
   Serial.print("S3: New Left Angle: ");
   Serial.println(Motor_Left_Ins.getNewAngelValue());*/
@@ -429,11 +438,11 @@ unsigned int Draw() {  //State 3
   Serial.println(Motor_Left_Ins.Angle_Tollerance_Value);
 
   //5.Step: move from old angle to new angle
-
+/*
 moveToNewPositionLeft();
 moveToNewPositionRight();
-
-  //moveToNewPosition();
+*/
+  moveToNewPosition();
 
   //6.Step: exit conditions:
   Start_StateMachine = false;
@@ -445,7 +454,7 @@ moveToNewPositionRight();
   }
   //8.Step: if the current coordinates are not equal to the target coordinates do the loop again
   else if ((MM_Calc_Ins.Xz_NextStep_Value < MM_Calc_Ins.X2_Target_Value) and (MM_Calc_Ins.Yz_NextStep_Value < MM_Calc_Ins.Y2_Target_Value)) {
-        Serial.print("S3: Coordinates do not match ");
+/*        Serial.print("S3: Coordinates do not match ");
     Serial.print(MM_Calc_Ins.Xz_NextStep_Value);
     Serial.print("Yz ");
     Serial.print(MM_Calc_Ins.Yz_NextStep_Value);
@@ -453,7 +462,7 @@ moveToNewPositionRight();
     Serial.print(MM_Calc_Ins.X2_Target_Value);
     Serial.print(" / Y2 ");
     Serial.println(MM_Calc_Ins.Y2_Target_Value);
-    Serial.print(" One More Stepp ");
+    Serial.print(" One More Stepp ");*/
     
 if ((MM_Calc_Ins.Xz_NextStep_Value == 0) or (MM_Calc_Ins.Yz_NextStep_Value == 0)) return(5); 
 else{    Status = 2;    return (3);}
