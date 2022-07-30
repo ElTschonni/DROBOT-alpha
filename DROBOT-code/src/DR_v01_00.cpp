@@ -241,16 +241,16 @@ void moveToNewPosition() {
   unsigned long counterTollerance = 0;
   //unsigned long counter = 0;
   //double TotalTimeL = 0;
-  //double TotalTimeR = 0;
+ // double TotalTimeR = 0;
 
   bool exitStep = false;
 
 
   do {
     //   Serial.print(" Number of Steps: ");
-    //   Serial.print(counterTollerance++);
- // Motor_Left_Ins.StartTimer();
- // Motor_Right_Ins.StartTimer();
+       counterTollerance++;
+ /* Motor_Left_Ins.StartTimer();
+  Motor_Right_Ins.StartTimer();*/
 
     do {  //do one step
       
@@ -265,26 +265,24 @@ void moveToNewPosition() {
       else {   exitStep = true;      }
       if (Motor_Left_Ins.errorcode > 0) exitStep = true;
     } while (exitStep == false);
-
-//TotalTimeL= TotalTimeL + Motor_Left_Ins.TimeControll();
+/*counter++;
+TotalTimeL= TotalTimeL + Motor_Left_Ins.TimeControll();*/
 //TotalTimeR= TotalTimeR + Motor_Right_Ins.TimeControll();
 
 
   } while (!Motor_Right_Ins.Angle_Tollerance_Value or !Motor_Left_Ins.Angle_Tollerance_Value);
-  /*Serial.println("mTNP: Step Time L: ");
-  Serial.print(TotalTimeL/counter);
+ /*  Serial.println("");
+  Serial.print("mTNP: Step Time L: ");
+  Serial.println(TotalTimeL/counter);
   Serial.print(" R: ");
-  Serial.print(TotalTimeR/counter);
+  Serial.println(TotalTimeR/counter);
   counter=0;*/
 
   Serial.println("mTNP: Both Angle in Tollerance: ");
   Motor_Left_Ins.setNewAngelValue(Motor_Left_Ins.getOldAngelValue());
   Motor_Right_Ins.setNewAngelValue(Motor_Right_Ins.getOldAngelValue());
   
-
   counterTollerance = 0;
-
-
 
 }
 
@@ -820,8 +818,7 @@ unsigned int Calibrate() {  //State 7
     Serial.println("Motor Left Set Angle: Failed");
     return (5);
   }
-
-  
+ 
   //4. move Motor right to enpoint 2
 
 
@@ -841,7 +838,6 @@ unsigned int Calibrate() {  //State 7
   MM_Calc_Ins.setOriginCoordinates(Coordinate_0X_Value, Coordinate_0Y_Value);
 
 
-
   Serial.print(" Calibration: New Coordinates: X: ");
   Serial.print(MM_Calc_Ins.X1_Origin_Value);
   Serial.print(" Y: ");
@@ -851,11 +847,10 @@ unsigned int Calibrate() {  //State 7
   Serial.println(Motor_Right_Ins.errorcode);
 
 
-
-
   Status = 1;
-  return (1);
   LastState = 8;
+  return (1);
+
 }
 
 
