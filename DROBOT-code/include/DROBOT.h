@@ -57,17 +57,15 @@ private:
   unsigned long us_timer_value;
   unsigned long us_timer_start;
   //Motor Pin Configuration
-  long Motor_Enable_Pin;  //Hardware configuration of the Enable pin
-  long Motor_Pull_Pin;    //Pull Pin Puls to move by one step
-  long Motor_Dir_Pin;     //Direction pin - set to high to move right, low for left
-  long Motor_Alarm_Pin;   //Alarm Pin
-  long Motor_Ped_Pin;     // Confirmation bit for reaching the new stepp
+  unsigned int Motor_Enable_Pin;  //Hardware configuration of the Enable pin
+  unsigned int Motor_Pull_Pin;    //Pull Pin Puls to move by one step
+  unsigned int Motor_Dir_Pin;     //Direction pin - set to high to move right, low for left
+  unsigned int Motor_Alarm_Pin;   //Alarm Pin
+  unsigned int Motor_Ped_Pin;     // Confirmation bit for reaching the new stepp
 
   //  Adafruit_MCP23X17 GPIO_I2C_Exp;
   Adafruit_MCP23X17 *GPIO_I2C_Exp;
 
-
-  long long delayNumber = 0;
 
   //Motor Pin Values
   bool Motor_Enable_Value = false;
@@ -77,7 +75,9 @@ private:
   bool Motor_Ped_Value = false;
   bool Motor_Position_Value = Motor_Position_right;  //1 = right. 0 = left
 
-  long Dip_Switch_Value = 0;
+  unsigned int Dip_Switch_Value = 0;
+  double Gear_Belt_Value = 0;
+
 
   //Error Code
   /* 1 = Alarm Pin Motor
@@ -114,8 +114,7 @@ private:
 
   double Old_Angle_Value = 0;
   double New_Angle_Value = 0;
-  double Max_Angle_Value = 360;
-  double Min_Angle_Value = 0;
+
 
 
 public:
@@ -135,8 +134,9 @@ public:
 
   bool Angle_Tollerance_Value = 0;  //1 = Angle in Tollerance; 0 = Angle outside Tollerance
 
-  long errorcode = 0;
-
+  unsigned int errorcode = 0;
+  double Max_AngDev_Value = 0;
+  double Min_AngDev_Value = 0;
 
   Closed_Loop_Step_Motor(Adafruit_MCP23X17 *GPIO_instance) {
 
@@ -148,19 +148,19 @@ public:
 
   //Methods
   //Method to configure the Motor Object. - Hardware Pin Mapping and DipSwitch Position
-  void setupMotor(bool MotorPos, long EnPin, long PullPin, long DirPin, long AlmPin, long PedPin, long RPM, long DipSwitch) {  //Motor Pin Configuration
+  void setupMotor(bool MotorPos, unsigned int EnPin, unsigned int PullPin, unsigned int DirPin, unsigned int AlmPin, unsigned int PedPin, unsigned int RPM, unsigned int DipSwitch, double GearBelt) {  //Motor Pin Configuration
     Motor_Enable_Pin = EnPin;
     Motor_Pull_Pin = PullPin;
     Motor_Dir_Pin = DirPin;
     Motor_Alarm_Pin = AlmPin;
     Motor_Ped_Pin = PedPin;
     Dip_Switch_Value = DipSwitch;
-    Angle_Per_step = Dip_Switch_Array[DipSwitch][1];  // Read Value Angle per Step from DipSwitch Array
+    Gear_Belt_Value = GearBelt;
+    Angle_Per_step = Dip_Switch_Array[DipSwitch][1]/Gear_Belt_Value;  // Read Value Angle per Step from DipSwitch Array
     Steps_Per_rev = Dip_Switch_Array[DipSwitch][0];   //Read Value Steps per Revolution from Dip Switch Array
     Motor_Position_Value = MotorPos;
-
+    
     RPM_SetPoint_Value = RPM;
-
 
     Time_PerRotation_Value = 60 / RPM_SetPoint_Value;
     Time_PerStep_Value = (60 / RPM_SetPoint_Value) / Steps_Per_rev;
@@ -207,7 +207,7 @@ public:
   bool startSurvilance() {
     //  If motor Alarm Pin is high -> alarm
     Motor_Alarm_Value = GPIO_I2C_Exp->digitalRead(Motor_Alarm_Pin);
-/*
+    /*
     if (Motor_Alarm_Value == true) {
       Serial.println("ALARM");
       M5.lcd.println("ALARM");
@@ -226,7 +226,7 @@ public:
     //keeps Angle below 360°
     if ((Motor_Position_Value == 1) and ((Angle <= 100) or (Angle >= 270))) {  //if motorposition is right / 90°=>x<=270°
       Old_Angle_Value = Angle;
-   /*   Serial.print("setOldAngleValue r ");
+      /*   Serial.print("setOldAngleValue r ");
       Serial.println(Old_Angle_Value);
       M5.lcd.print("setOldAngleValue r ");
       M5.lcd.println(Old_Angle_Value);*/
@@ -234,7 +234,7 @@ public:
     } else if ((Motor_Position_Value == 0) and (Angle >= 80) and (Angle <= 270))  //if motorposition is left / 90°=<x<=270°
     {
       Old_Angle_Value = Angle;
-   /*   Serial.print("setOldAngleValue l ");
+      /*   Serial.print("setOldAngleValue l ");
       Serial.println(Old_Angle_Value);
       M5.lcd.print("setOldAngleValue l ");
       M5.lcd.println(Old_Angle_Value);*/
@@ -248,29 +248,26 @@ public:
   double getOldAngelValue() {
     return (Old_Angle_Value);
     Serial.println("getOldAngleValue");
-    M5.lcd.println("getOldAngleValue");
   }
 
 
   bool setNewAngelValue(double Angle) {
 
-    while (Angle >= 360) { Angle = Angle - 360; }                     //keeps Angle below 360°
+    while (Angle >= 360) { Angle = Angle - 360; }                                                  //keeps Angle below 360°
     if ((Motor_Position_Value and (Angle <= 120)) or (Motor_Position_Value and (Angle >= 270))) {  //if motorposition is right / 90°=>x>=-90°
       Angle = Angle + 120;
       if (Angle >= 360) Angle = Angle - 360;  //if Angle between 270 and 360, it will be changed to a value between 0 and 90
-      New_Angle_Value = Angle - 120;           //Angle between 0 and 180, will be changed to a value between -90 and 90
-  /*    Serial.print("setNewAngleValue r ");
+      New_Angle_Value = Angle - 120;          //Angle between 0 and 180, will be changed to a value between -90 and 90
+      Serial.print(" sNA: setNewAngleValue° R: ");
       Serial.println(New_Angle_Value);
-      M5.lcd.print("setNewAngleValue r ");
-      M5.lcd.println(New_Angle_Value);*/
+
       return (1);
     } else if (!Motor_Position_Value and (Angle >= 80) and (Angle <= 270))  //if motorposition is left / 90°=<x<=270°
     {
       New_Angle_Value = Angle;  //
-   /*   Serial.print("setNewAngleValue l ");
+      Serial.print(" sNA: setNewAngleValue° L: ");
       Serial.println(New_Angle_Value);
-      M5.lcd.print("setNewAngleValue l ");
-      M5.lcd.println(New_Angle_Value);*/
+
       return (1);
     } else {
       return (0);  //returns error Message (Angle Value Wrong)
@@ -281,8 +278,31 @@ public:
   double getNewAngelValue() {
     return (New_Angle_Value);
     Serial.println("getNewAngleValue");
-    M5.lcd.println("getNewAngleValue");
   }
+
+/*
+void StartTimer(){
+      //start timer
+    us_timer_state = 1;
+    us_timer_value = Time_PerStep_Value * 1000000;
+    us_timer_start = micros();
+
+}
+
+double TimeControll(){
+    unsigned long Step_Time_Value =0;
+    bool survilance = 1;
+
+
+  
+      while (us_timer_state and survilance) {  //wait if time per step is to short
+        survilance = startSurvilance();
+        Step_Time_Value = micros() - us_timer_start;
+
+        if ((us_timer_value) < Step_Time_Value) us_timer_state = 0;
+      }
+      return (Step_Time_Value);
+      }*/
 
   //MotorMovement Methodes
   bool moveOneStep(bool direction) {
@@ -329,55 +349,47 @@ public:
 
   bool OneStepDir(/*bool direction*/) {
     bool I_did_one_Step = false;
-    unsigned long counter = 0;
-    unsigned long Step_Time_Value;
+      unsigned long counter = 0;
     bool survilance = 1;
-    double Max_AngleDev_value = 0;
-    double Min_AngleDev_value = 0;
+    Max_AngDev_Value = 0;
+    Min_AngDev_Value = 0;
 
-
-
-    //start timer
-    us_timer_state = 1;
-    us_timer_value = Time_PerStep_Value * 1000000;
-    us_timer_start = micros();
-    Max_AngleDev_value = New_Angle_Value + Angle_Per_step * 1.05;
-    Min_AngleDev_value = New_Angle_Value - Angle_Per_step * 1.05;
+    //Angle deviation depending on min. resolution
+    Max_AngDev_Value = New_Angle_Value + Angle_Per_step * 0.5;
+    Min_AngDev_Value = New_Angle_Value - Angle_Per_step * 0.5;/*
+Serial.println("");
+      Serial.print("OSD: Max_AngleDev_value : ");
+      Serial.print(Max_AngDev_Value);
+        Serial.print("OSD: Min_AngleDev_value : ");
+      Serial.println(Min_AngDev_Value);*/
 
     //enableMotor();
     // survilance = startSurvilance();
 
     if (survilance) {
-      /*  Serial.print(" New_Angle_Value: ");
+      /*Serial.println("");
+      Serial.print("OSD: New_Angle_Value: ");
       Serial.print(New_Angle_Value);
       Serial.print(" Old_Angle_Value: ");
-      Serial.print(Old_Angle_Value);
-
-      M5.lcd.print(" New_Angle_Value: ");
-      M5.lcd.print(New_Angle_Value);
-      M5.lcd.print(" Old_Angle_Value: ");
-      M5.lcd.print(Old_Angle_Value);*/
+      Serial.println(Old_Angle_Value);*/
 
       //aslong as the old angle is out of new angle tollerance
-      if (Old_Angle_Value < Min_AngleDev_value) {
+      if (Old_Angle_Value < Min_AngDev_Value) {
         Angle_Tollerance_Value = 0;
-
         while ((I_did_one_Step == 0) and (counter < 100000) and startSurvilance()) {  // try as until you did one Stepbut try not more than 100000 times.
           I_did_one_Step = moveOneStep(Motor_Turn_left);
-
-
           counter++;
         };
         counter = 0;
         I_did_one_Step = 0;
         Old_Angle_Value = Old_Angle_Value + Angle_Per_step;
 
-      } else if (Old_Angle_Value > Max_AngleDev_value)  //if the new Angle is smaller than the old turn the motor left to make the difference smaller.
+      } else if (Old_Angle_Value > Max_AngDev_Value)  //if the new Angle is smaller than the old turn the motor left to make the difference smaller.
       {
         Angle_Tollerance_Value = 0;
 
         while ((I_did_one_Step == 0) and (counter < 100000) and survilance) {  // try as until you did one Stepbut try not more than 100000 times.
-                                                                               //  survilance = startSurvilance();
+                                                                   //  survilance = startSurvilance();
           I_did_one_Step = moveOneStep(Motor_Turn_right);
           counter++;
         };
@@ -385,43 +397,18 @@ public:
         I_did_one_Step = 0;  //normaly 0
         Old_Angle_Value = Old_Angle_Value - Angle_Per_step;
 
-      } else { Angle_Tollerance_Value = 1;
-      }
-
-      while (us_timer_state and survilance) {  //wait if time per step is to short
-        survilance = startSurvilance();
-
-        if ((us_timer_value) < (micros() - us_timer_start)) {
-          us_timer_state = 0;
-
-/*
-           Serial.print(" us_timer_value: ");
-                Serial.print(us_timer_value);
-                Serial.print(" < ");
-            Serial.print(micros() - us_timer_start);*/
-
-          Step_Time_Value = (micros() - us_timer_start) / 1000;
-           /*      Serial.print(" StepTime: ");
-          Serial.print(Step_Time_Value);
-          M5.lcd.print(" StepTime: ");
-          M5.lcd.print(Step_Time_Value);*/
        
-          if ((Step_Time_Value) >= (us_timer_value / 800)) errorcode = 5;
-          else{errorcode = 0; }
-         /*
-                           Serial.print(" >= ");
-          Serial.println((us_timer_value / 800));*/
 
-          us_timer_state = 0;
-          // disableMotor();
-          return (1);
-        }
+      } else {
+        Angle_Tollerance_Value = 1;
+        
       }
-    } else {
-      return (1);
-    }
-    //   Serial.println();
-    //   M5.lcd.println();
+
+    } 
+
+    return(1);
+
+
   }
 };
 
@@ -455,7 +442,7 @@ public:
     double MinR_Value = 0;
 
     Steps_Per_Rev = StPerRot;
-    Angle_Per_Step = AngPerStp;
+    Angle_Per_Step = AngPerStp*1.05; // Angle prer step times a 5% Tollerance Margin
     Angle_Per_StepB = DEG_TO_RAD * Angle_Per_Step;  //Angle per Step in Radiants
     Length_BaseToTip_Value = LArm;
 
@@ -523,7 +510,7 @@ public:
       if (Length_ofWay_Value == 0) TotalNof_Steps_Value = 0;  //Number of Steps is also gona be 0
       else {
         TotalNof_Steps_Value = Length_ofWay_Value / Min_Resolution_Value;
-/*
+        /*
        Serial.print(" Ib: TotalNof_Steps_Value ");
         Serial.print(TotalNof_Steps_Value);
         Serial.print(" = Min_Res:  ");
@@ -574,7 +561,7 @@ public:
       //interpolation finished
     } else if ((Done_Steps_Value >= TotalNof_Steps_Value) and (TotalNof_Steps_Value > 0)) {
 
-    /*  Serial.print(" Id: Xz_NextStep_Value: ");
+      /*  Serial.print(" Id: Xz_NextStep_Value: ");
       Serial.print(Xz_NextStep_Value);
       Serial.print(" Yz_NextStep_Value ");
       Serial.println(Yz_NextStep_Value);
@@ -586,10 +573,11 @@ public:
       Y1_Origin_Value = Yz_NextStep_Value;
       X1_Origin_Value = Xz_NextStep_Value;
 
-    /*  Serial.print(" Id: X1_Origin_Value  : ");
+
+      Serial.print(" Id: X1_Origin_Value  : ");
       Serial.print(X1_Origin_Value);
       Serial.print(" Y1_Origin_Value  : ");
-      Serial.println(Y1_Origin_Value);*/
+      Serial.println(Y1_Origin_Value);
 
       Done_Steps_Value = 0;
       Length_ofWay_Value = 0;
@@ -689,35 +677,35 @@ public:
     double discriminant_2Circle_Value = 0;
     double pStack = 0;
     double UpArm2;
-      double LowArm2, X2,X1,Y1,Y2,Y2x2;
+    double LowArm2, X2, X1, Y1, Y2, Y2x2;
     Circle1_Middle_X = C1MX * 1.00;  // Middle Point coordianetes X of Circle 1 (Drehgelenk Schulterachse)
     Circle1_Middle_Y = C1MY * 1.00;  // Middle Point coordianetes Y of Circle 1 (Drehgelenk Schulterachse)
     Circle2_Middle_X = C2MX * 1.00;  // Middle Point coordianetes X of Circle 2 (Koordinaten von Stift)
     Circle2_Middle_Y = C2MY * 1.00;  // Middle Point coordianetes Y of Circle 2 (Koordinaten von Stift)
 
-Serial.print("Io2C: 1 Circle Middle: X  ");
-Serial.print(Circle1_Middle_X);
- Serial.print(" Y: ");
-Serial.print(Circle1_Middle_Y);
-Serial.print(" 2 Circle Middle: X  ");
-Serial.print(Circle2_Middle_X);
-Serial.print(" Y: ");
-Serial.println(Circle2_Middle_Y);
+    Serial.print("Io2C: 1 Circle Middle: X  ");
+    Serial.print(Circle1_Middle_X);
+    Serial.print(" Y: ");
+    Serial.print(Circle1_Middle_Y);
+    Serial.print(" 2 Circle Middle: X  ");
+    Serial.print(Circle2_Middle_X);
+    Serial.print(" Y: ");
+    Serial.println(Circle2_Middle_Y);
 
     // y=mx+b
     Line_S1S2_m = (Circle1_Middle_X * 1.00 - Circle2_Middle_X * 1.00) / ((Circle2_Middle_Y * 1.00 - Circle1_Middle_Y * 1.00));
-    
-    UpArm2 = Lenght_UpArm_Value * Lenght_UpArm_Value*1.00;
-    LowArm2=Lenght_LowArm_Value * Lenght_LowArm_Value;
-    Y2=Circle2_Middle_Y * Circle2_Middle_Y;
-    Y1=Circle1_Middle_Y * Circle1_Middle_Y;
-    X2=Circle2_Middle_X * Circle2_Middle_X; 
-    X1=Circle1_Middle_X * Circle1_Middle_X;
-    Y2x2=2.00 * (Circle2_Middle_Y - Circle1_Middle_Y);
+
+    UpArm2 = Lenght_UpArm_Value * Lenght_UpArm_Value * 1.00;
+    LowArm2 = Lenght_LowArm_Value * Lenght_LowArm_Value;
+    Y2 = Circle2_Middle_Y * Circle2_Middle_Y;
+    Y1 = Circle1_Middle_Y * Circle1_Middle_Y;
+    X2 = Circle2_Middle_X * Circle2_Middle_X;
+    X1 = Circle1_Middle_X * Circle1_Middle_X;
+    Y2x2 = 2.00 * (Circle2_Middle_Y - Circle1_Middle_Y);
 
     Line_S1S2_b = (UpArm2 - LowArm2 + Y2 - Y1 + X2 - X1) / (2.00 * (Circle2_Middle_Y - Circle1_Middle_Y));
 
-   /*
+    /*
     Serial.print(" UpArm2 ");
     Serial.print(UpArm2);
     Serial.print(" LowArm2 ");
@@ -739,7 +727,7 @@ Serial.println(Circle2_Middle_Y);
     Serial.println((UpArm2 - LowArm2 + Y2 - Y1 + X2 - X1));
 */
 
- /* Serial.print("Io2C: y=mx+b:  ");
+    /* Serial.print("Io2C: y=mx+b:  ");
     Serial.print(" y= ");
     Serial.print(Line_S1S2_m);
     Serial.print(" * x +");
@@ -766,7 +754,7 @@ Serial.println(Circle2_Middle_Y);
     p = 2 * pStack / (1 + Line_S1S2_m * Line_S1S2_m);
     q = (Circle1_Middle_X * Circle1_Middle_X + (Line_S1S2_b - Circle1_Middle_Y) * (Line_S1S2_b - Circle1_Middle_Y) - Lenght_UpArm_Value * Lenght_UpArm_Value) / (1 + Line_S1S2_m * Line_S1S2_m);
     discriminant_2Circle_Value = p * p / 4 - q;
-/*
+    /*
     Serial.print("Io2C: p: ");
     Serial.print(p);
     Serial.print(" = 2 *");
@@ -797,16 +785,15 @@ Serial.println(Circle2_Middle_Y);
       Serial.print(Intersection_I1_X);
       Serial.print(" Intersection_I2_X: ");
       Serial.println(Intersection_I2_X);
-      
+
       // Y=mx+b, Res_X1 und Res_X2 einsetzen
       Intersection_I1_Y = Line_S1S2_m * Intersection_I1_X + Line_S1S2_b;
       Intersection_I2_Y = Line_S1S2_m * Intersection_I2_X + Line_S1S2_b;
-      
+
       Serial.print("Io2C: Intersection_I1_Y: ");
       Serial.print(Intersection_I1_Y);
       Serial.print(" Intersection_I2_Y: ");
       Serial.println(Intersection_I2_Y);
-
     }
     if (discriminant_2Circle_Value > 0) return 2;
     if (discriminant_2Circle_Value == 0) return 1;
@@ -819,25 +806,25 @@ Serial.println(Circle2_Middle_Y);
   {
 
     if (WhichArm == right_Arm) {
-    //  Serial.println("IK: Inverse Kinematic right Arm Angle  ");
+      //  Serial.println("IK: Inverse Kinematic right Arm Angle  ");
 
-      angle_RightArm_Value1 = RAD_TO_DEG * atan2((Intersection_I1_Y - 0.00) * 1.00, (Intersection_I1_X - DeltaX_RightArm_Value* 1.00) );
-      if(angle_RightArm_Value1<0)angle_RightArm_Value1=360+angle_RightArm_Value1;//calculating the positiv angle
-            
-      Serial.print("IK: 1RightArm°: ");
+      angle_RightArm_Value1 = RAD_TO_DEG * atan2((Intersection_I1_Y - 0.00) * 1.00, (Intersection_I1_X - DeltaX_RightArm_Value * 1.00));
+      if (angle_RightArm_Value1 < 0) angle_RightArm_Value1 = 360 + angle_RightArm_Value1;  //calculating the positiv angle
+
+      /* Serial.print("IK: 1RightArm°: ");
       Serial.print(angle_RightArm_Value1);
-    /*  Serial.print(" =  atan2(");
+      Serial.print(" =  atan2(");
       Serial.print((Intersection_I1_Y - 0.00) * 1.00);
       Serial.print("/");
       Serial.print((Intersection_I1_X - DeltaX_RightArm_Value) * 1.00);
       Serial.println(") ");*/
 
-      angle_RightArm_Value2 = RAD_TO_DEG * atan2((Intersection_I2_Y - 0.00) * 1.00, (Intersection_I2_X - DeltaX_RightArm_Value* 1.00) );
-      if(angle_RightArm_Value2<0)angle_RightArm_Value2=360+angle_RightArm_Value2;//calculating the positiv angle
-      
-      Serial.print(", 2RightArm°: ");
+      angle_RightArm_Value2 = RAD_TO_DEG * atan2((Intersection_I2_Y - 0.00) * 1.00, (Intersection_I2_X - DeltaX_RightArm_Value * 1.00));
+      if (angle_RightArm_Value2 < 0) angle_RightArm_Value2 = 360 + angle_RightArm_Value2;  //calculating the positiv angle
+
+      /* Serial.print(", 2RightArm°: ");
       Serial.println(angle_RightArm_Value2);
-    /*  Serial.print(" =  atan2(");
+    Serial.print(" =  atan2(");
       Serial.print((Intersection_I2_Y - 0.00) * 1.00);
       Serial.print("/");
       Serial.print((Intersection_I2_X - DeltaX_RightArm_Value) * 1.00);
@@ -847,24 +834,24 @@ Serial.println(Circle2_Middle_Y);
     if (WhichArm == left_Arm) {
       //Serial.println("IK: Inverse Kinematic left Arm Angle  ");
 
-      angle_LeftArm_Value1 = RAD_TO_DEG * atan2((Intersection_I1_Y - 0.00) * 1.00, (Intersection_I1_X - DeltaX_LeftArm_Value* 1.00) );
-      if(angle_LeftArm_Value1<0)angle_LeftArm_Value1=360+angle_LeftArm_Value1;//calculating the positiv angle
-      
-       Serial.print("IK: 1LeftArm°: ");
+      angle_LeftArm_Value1 = RAD_TO_DEG * atan2((Intersection_I1_Y - 0.00) * 1.00, (Intersection_I1_X - DeltaX_LeftArm_Value * 1.00));
+      if (angle_LeftArm_Value1 < 0) angle_LeftArm_Value1 = 360 + angle_LeftArm_Value1;  //calculating the positiv angle
+
+      /* Serial.print("IK: 1LeftArm°: ");
       Serial.print(angle_LeftArm_Value1);
-      /*Serial.print(" =  atan2(");
+      Serial.print(" =  atan2(");
       Serial.print((Intersection_I1_Y - 0.00) * 1.00);
       Serial.print("/");
       Serial.print((Intersection_I1_X - DeltaX_LeftArm_Value) * 1.00);
       Serial.println(") ");*/
 
 
-      angle_LeftArm_Value2 = RAD_TO_DEG * atan2((Intersection_I2_Y - 0.00) * 1.00, (Intersection_I2_X - DeltaX_LeftArm_Value* 1.00) );
-      if(angle_LeftArm_Value2<0)angle_LeftArm_Value2=360+angle_LeftArm_Value2;//calculating the positiv angle
-
+      angle_LeftArm_Value2 = RAD_TO_DEG * atan2((Intersection_I2_Y - 0.00) * 1.00, (Intersection_I2_X - DeltaX_LeftArm_Value * 1.00));
+      if (angle_LeftArm_Value2 < 0) angle_LeftArm_Value2 = 360 + angle_LeftArm_Value2;  //calculating the positiv angle
+                                                                                        /*
       Serial.print(", 2LeftArm°: ");
       Serial.println(angle_LeftArm_Value2);
-     /* Serial.print(" =  atan2(");
+      Serial.print(" =  atan2(");
       Serial.print((Intersection_I2_Y - 0.00) * 1.00);
       Serial.print("/");
       Serial.print((Intersection_I2_X - DeltaX_LeftArm_Value) * 1.00);

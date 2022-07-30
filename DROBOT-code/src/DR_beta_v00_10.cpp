@@ -44,31 +44,33 @@
 #define right_Arm 1
 #define left_Arm 0
 
-#define Mright_DIPSW_Value 0b0010  //initial Motor Speed in RPM
-#define Mleft_DIPSW_Value 0b0010   //initial Motor Speed in RPM
+#define Mright_DIPSW_Value 0b0001  //initial Motor Speed in RPM
+#define Mleft_DIPSW_Value 0b0001   //initial Motor Speed in RPM
 
 //Robot Measurements:
-#define length_BaseToTip_Value 630  // length from the rotation axis to the tool tip in mm
+#define CoordResolution *100
+
+#define length_BaseToTip_Value 630 CoordResolution // length from the rotation axis to the tool tip in mm
 #define max_TimeForComand_value 60  //maximum time for one command in s
 
 
-#define Lenght_UpArm_Value 252   //length of the  Upper Arm in mm
-#define Lenght_LowArm_Value 333  //length of the  Lower Arm in mm
+#define Lenght_UpArm_Value 252 CoordResolution  //length of the  Upper Arm in mm
+#define Lenght_LowArm_Value 333 CoordResolution //length of the  Lower Arm in mm
 
-#define MeetingPoint_TipPoint_Value 60       //length between tip of the tool and meeting point of arms
+#define MeetingPoint_TipPoint_Value 60 CoordResolution       //length between tip of the tool and meeting point of arms
 #define MeetingPoint_TipPoint_AngleValue 45  //Angle of the line between Meetingpoint to tip of the tool
-#define DeltaX_LeftArm_Value 254             //Delta X from center to rotation point of the Left Arm
-#define DeltaX_RightArm_Value 404            //Delta X from center to rotation point of the Right Arm
-#define Transmission_LeftArm_Value 1
-#define Transmission_RightArm_Value 1
+#define DeltaX_LeftArm_Value 254 CoordResolution            //Delta X from center to rotation point of the Left Arm
+#define DeltaX_RightArm_Value 404 CoordResolution         //Delta X from center to rotation point of the Right Arm
+#define Transmission_LeftArm_Value 2.5
+#define Transmission_RightArm_Value 2.5
 
-#define Coordinate_maxX_Value 600
-#define Coordinate_minX_Value 100
-#define Coordinate_maxY_Value 550
-#define Coordinate_minY_Value 200
+#define Coordinate_maxX_Value 600 CoordResolution
+#define Coordinate_minX_Value 100 CoordResolution
+#define Coordinate_maxY_Value 550 CoordResolution
+#define Coordinate_minY_Value 200 CoordResolution
 
-#define Coordinate_0X_Value 150
-#define Coordinate_0Y_Value 220
+#define Coordinate_0X_Value 150 CoordResolution
+#define Coordinate_0Y_Value 220 CoordResolution
 
 
 
@@ -122,7 +124,7 @@ Delta2D_Kinematic D2D_LeftArm_Kin;                            //create the Kinem
 unsigned int programSelector = 6;  //Program selection variable
 
 unsigned int StartUp = 1;
-unsigned int LastState =0;
+unsigned int LastState = 0;
 
 bool Start_StateMachine = false;
 unsigned int Status = 1;  // 1 ready
@@ -163,33 +165,33 @@ uint16_t CBneuerBefehl(TRegister* reg, uint16_t val) {
     programSelector = 2;
     Befehl = mb.Hreg(BEFEHL_HREG);
     Start_StateMachine = true;
-    LastState =0;
+    LastState = 0;
   }
   return val;
 }
 
 uint16_t CBneuerParameterX(TRegister* reg, uint16_t val) {
   Serial.println("Neue Parameter X!");
-  X = (mb.Hreg(X_HREG) / 100) + (Coordinate_0X_Value);  // X in 100stel Millimeter
-  LastState =0;
+  X = (mb.Hreg(X_HREG)) + (Coordinate_0X_Value);  // X in 100stel Millimeter
+  LastState = 0;
   return val;
 }
 uint16_t CBneuerParameterY(TRegister* reg, uint16_t val) {
   Serial.println("Neue Parameter Y!");
-  Y = (mb.Hreg(Y_HREG) / 100) + (Coordinate_0Y_Value);
-  LastState =0;
+  Y = (mb.Hreg(Y_HREG)) + (Coordinate_0Y_Value);
+  LastState = 0;
   return val;
 }
 uint16_t CBneuerParameterZ(TRegister* reg, uint16_t val) {
   Serial.println("Neue Parameter Z!");
   Z = mb.Hreg(Z_HREG);
- LastState =0;
+  LastState = 0;
   return val;
 }
 uint16_t CBneuerParameterF(TRegister* reg, uint16_t val) {
   Serial.println("Neue Parameter F!");
   F = mb.Hreg(F_HREG);  // Geschwindigkeit in mm/min
-  LastState =0;
+  LastState = 0;
   return val;
 }
 
@@ -236,26 +238,53 @@ void moveToNewPositionRight() {
 
 void moveToNewPosition() {
   unsigned long counterTollerance = 0;
+  //unsigned long counter = 0;
+  //double TotalTimeL = 0;
+  //double TotalTimeR = 0;
+
   bool exitStep = false;
+
 
   do {
     //   Serial.print(" Number of Steps: ");
     //   Serial.print(counterTollerance++);
+ // Motor_Left_Ins.StartTimer();
+ // Motor_Right_Ins.StartTimer();
 
     do {  //do one step
+      
       if (Motor_Right_Ins.OneStepDir() == 0) exitStep = false;
       else { exitStep = true; }
       if (Motor_Right_Ins.errorcode > 0) exitStep = true;
+
     } while (exitStep == false);
-        do {  //do one step
+    do {  //do one step
+      
       if (Motor_Left_Ins.OneStepDir() == 0) exitStep = false;
-      else { exitStep = true; }
+      else {   exitStep = true;      }
       if (Motor_Left_Ins.errorcode > 0) exitStep = true;
     } while (exitStep == false);
 
+//TotalTimeL= TotalTimeL + Motor_Left_Ins.TimeControll();
+//TotalTimeR= TotalTimeR + Motor_Right_Ins.TimeControll();
+
+
   } while (!Motor_Right_Ins.Angle_Tollerance_Value or !Motor_Left_Ins.Angle_Tollerance_Value);
+  /*Serial.println("mTNP: Step Time L: ");
+  Serial.print(TotalTimeL/counter);
+  Serial.print(" R: ");
+  Serial.print(TotalTimeR/counter);
+  counter=0;*/
+
+  Serial.println("mTNP: Both Angle in Tollerance: ");
+  Motor_Left_Ins.setNewAngelValue(Motor_Left_Ins.getOldAngelValue());
+  Motor_Right_Ins.setNewAngelValue(Motor_Right_Ins.getOldAngelValue());
+  
 
   counterTollerance = 0;
+
+
+
 }
 
 //=========| Funktionen StateMachine |=========================================*/
@@ -263,32 +292,27 @@ void moveToNewPosition() {
 
 
 unsigned int Standby()  //State 1
-{Start_StateMachine = false;
+{
+  Start_StateMachine = false;
   mb.task();
   mb.Hreg(STATUS_HREG, Status);
-  if(LastState !=1){
-  Serial.print("- Standby: ");
-  //programSelector = 1;
+  if (LastState != 1) {
+    Serial.print("- Standby: ");
+    //programSelector = 1;
 
-  Serial.print(STATUS_HREG);
-  Serial.print(Status);
-  M5.lcd.print(Status);
-  Serial.print("- Roboter_State: ");
-  M5.lcd.print("- Roboter_State: ");
-  Serial.print(Status);
-  M5.lcd.print(Status);
-  Serial.print(" GCode_Command: ");
-  M5.lcd.print(" GCode_Command: ");
-  Serial.print(Befehl);
-  M5.lcd.print(Befehl);
-  Serial.print(" Start Statemachine: ");
-  M5.lcd.print(" Start Statemachine: ");
-  Serial.println(Start_StateMachine);
-  M5.lcd.println(Start_StateMachine);}
+    Serial.print(STATUS_HREG);
+    Serial.print(Status);
+    Serial.print("- Roboter_State: ");
+    Serial.print(Status);
+    Serial.print(" GCode_Command: ");
+    Serial.print(Befehl);
+    Serial.print(" Start Statemachine: ");
+    Serial.println(Start_StateMachine);
+  }
   //GPIO_Ports_Instanz.digitalWrite(Clamp_Servo_Pin, HIGH);
 
 
-LastState =1;
+  LastState = 1;
   return (programSelector);
 }
 
@@ -296,7 +320,6 @@ unsigned int Receive()  //State 2 Verarbeitung
 {
   mb.task();
   Serial.println("------ State Receive------");
-  M5.lcd.println("------ State Receive: ");
   Serial.print("- Roboter_State: ");
   Serial.println(Status);
   Serial.print("- GCode_Command: ");
@@ -307,11 +330,9 @@ unsigned int Receive()  //State 2 Verarbeitung
 
   if (Status == 1 and Start_StateMachine) {
     Serial.println("- StateMachine: Started");
-    M5.lcd.println("- StateMachine: Started: ");
 
     if (Befehl == 0 or Befehl == 1) {
       Serial.println("- Receive: Data");
-      M5.lcd.println("- Receive: Data ");
       Serial.print(" G");
       Serial.print(Befehl);
       Serial.print(" X");
@@ -366,11 +387,11 @@ unsigned int Receive()  //State 2 Verarbeitung
     Timer_Start_01 = micros();
     Timer_Interval_01 = 1000000;
   }*/
-  LastState =2;
+  LastState = 2;
 }
 
 unsigned int Draw() {  //State 3
-  Serial.println("------ Draw -------");
+  Serial.print("S3: Draw");
   double old_Angle_value = 0;
   double new_Angle_value = 0;
   unsigned long determinant_RightArm_Value = 0;
@@ -378,7 +399,7 @@ unsigned int Draw() {  //State 3
 
   //delay(500);
   //1.Step: LED Blink,
-  Motor_Left_Ins.test();  //Motor Class Test
+  //Motor_Left_Ins.test();  //Motor Class Test
 
   //2.Step:  set new target coordinates and start the interpolation:
   //test coordinates
@@ -389,10 +410,6 @@ unsigned int Draw() {  //State 3
   determinant_RightArm_Value = D2D_RightArm_Kin.IntersectionOfTwoCircles(DeltaX_RightArm_Value, 0, MM_Calc_Ins.Xz_NextStep_Value, MM_Calc_Ins.Yz_NextStep_Value);
   if (determinant_RightArm_Value == 2) {
     D2D_RightArm_Kin.InverseKinematic(right_Arm);
- /*   Serial.print("S3: NewAngle 1 Right Arm:  ");
-    Serial.println(D2D_RightArm_Kin.angle_RightArm_Value1);
-    Serial.print("S3: NewAngle 2 Right Arm:  ");
-    Serial.println(D2D_RightArm_Kin.angle_RightArm_Value2);*/
   }
 
   else {
@@ -400,14 +417,10 @@ unsigned int Draw() {  //State 3
     Serial.println(determinant_RightArm_Value);
   }
 
-//Left Arm
+  //Left Arm
   determinant_LeftArm_Value = D2D_LeftArm_Kin.IntersectionOfTwoCircles(DeltaX_LeftArm_Value, 0, MM_Calc_Ins.Xz_NextStep_Value, MM_Calc_Ins.Yz_NextStep_Value);
   if (determinant_LeftArm_Value == 2) {
     D2D_LeftArm_Kin.InverseKinematic(left_Arm);
- /*   Serial.print("S3: NewAngle 1 Left Arm:  ");
-    Serial.println(D2D_LeftArm_Kin.angle_LeftArm_Value1);
-    Serial.print("S3: NewAngle 2 Left Arm:  ");
-    Serial.println(D2D_LeftArm_Kin.angle_LeftArm_Value2);*/
   }
 
   else {
@@ -417,28 +430,20 @@ unsigned int Draw() {  //State 3
 
   //4.Step:  set new angle
 
-  if (Motor_Left_Ins.setNewAngelValue(D2D_LeftArm_Kin.angle_LeftArm_Value2)) Serial.println("Motor Left Set Angle: Succeed");
+  if (Motor_Left_Ins.setNewAngelValue(D2D_LeftArm_Kin.angle_LeftArm_Value2)) Serial.println("S3:  Motor Left Set Angle: Succeed");
   else {
     Serial.println("S3: Motor Left Set Angle: Failed");
     return (5);
   }
 
-    if (Motor_Right_Ins.setNewAngelValue(D2D_RightArm_Kin.angle_RightArm_Value1)) Serial.println("Motor Right Set Angle: Succeed");
+  if (Motor_Right_Ins.setNewAngelValue(D2D_RightArm_Kin.angle_RightArm_Value1)) Serial.println("S3:  Motor Right Set Angle: Succeed");
   else {
     Serial.println("S3: Motor Right Set Angle: Failed");
     return (5);
   }
 
-/*  Serial.print("S3: Old Left Angle: ");
-  Serial.println(Motor_Left_Ins.getOldAngelValue());
-  Serial.print("S3: New Left Angle: ");
-  Serial.println(Motor_Left_Ins.getNewAngelValue());*/
-
-  Serial.print("S3: Tollerance: ");
-  Serial.println(Motor_Left_Ins.Angle_Tollerance_Value);
-
   //5.Step: move from old angle to new angle
-/*
+  /*
 moveToNewPositionLeft();
 moveToNewPositionRight();
 */
@@ -446,26 +451,21 @@ moveToNewPositionRight();
 
   //6.Step: exit conditions:
   Start_StateMachine = false;
-//delay(3000);
+
+  //delay(3000);
   //7.Step: if there was an error, go to State 3 Error
   if (Motor_Left_Ins.errorcode > 0) {
+
     Status = 3;
     return (5);
   }
   //8.Step: if the current coordinates are not equal to the target coordinates do the loop again
   else if ((MM_Calc_Ins.Xz_NextStep_Value < MM_Calc_Ins.X2_Target_Value) and (MM_Calc_Ins.Yz_NextStep_Value < MM_Calc_Ins.Y2_Target_Value)) {
-/*        Serial.print("S3: Coordinates do not match ");
-    Serial.print(MM_Calc_Ins.Xz_NextStep_Value);
-    Serial.print("Yz ");
-    Serial.print(MM_Calc_Ins.Yz_NextStep_Value);
-    Serial.print(" / X2 ");
-    Serial.print(MM_Calc_Ins.X2_Target_Value);
-    Serial.print(" / Y2 ");
-    Serial.println(MM_Calc_Ins.Y2_Target_Value);
-    Serial.print(" One More Stepp ");*/
-    
-if ((MM_Calc_Ins.Xz_NextStep_Value == 0) or (MM_Calc_Ins.Yz_NextStep_Value == 0)) return(5); 
-else{    Status = 2;    return (3);}
+
+  
+    if ((MM_Calc_Ins.Xz_NextStep_Value == 0) or (MM_Calc_Ins.Yz_NextStep_Value == 0)) { Serial.println(" :18: ");Status =3;  LastState = 3; return (5);}
+    else {   Status = 2;      LastState = 3;      return (3);    }
+
   } else if ((MM_Calc_Ins.Xz_NextStep_Value == MM_Calc_Ins.X2_Target_Value) and (MM_Calc_Ins.Yz_NextStep_Value == MM_Calc_Ins.Y2_Target_Value)) {
     //9.Step: if the Target Coordinates are equal to the current coordinates, go to state 1
     Serial.print("S3: New Coordinates have been reached: Xz ");
@@ -477,11 +477,88 @@ else{    Status = 2;    return (3);}
     Serial.print(" / Y2 ");
     Serial.println(MM_Calc_Ins.Y2_Target_Value);
     Serial.print("S3:  Waiting for new Coordinates ");
+
+    MM_Calc_Ins.setOriginCoordinates(MM_Calc_Ins.X2_Target_Value, MM_Calc_Ins.Y2_Target_Value);
+
     Status = 1;
+    LastState = 3;
     return (1);
   }
+  else{
+    
+    if(MM_Calc_Ins.Done_Steps_Value<MM_Calc_Ins.TotalNof_Steps_Value){
 
-    LastState =3;
+  Serial.print("S3: Coordinates and Angle Match -> go to next Interpolate Step. ");
+
+     Status = 2;      LastState = 3;      return (3); 
+     }
+     else if (MM_Calc_Ins.Done_Steps_Value==MM_Calc_Ins.TotalNof_Steps_Value)
+    {
+
+        Serial.print("S3: Interpolate Steps Finished: Xz ");
+    Serial.print(MM_Calc_Ins.Xz_NextStep_Value);
+    Serial.print("Yz ");
+    Serial.print(MM_Calc_Ins.Yz_NextStep_Value);
+    Serial.print(" / X2 ");
+    Serial.print(MM_Calc_Ins.X2_Target_Value);
+    Serial.print(" / Y2 ");
+    Serial.println(MM_Calc_Ins.Y2_Target_Value);
+    Serial.print("S3:  Waiting for new Coordinates ");
+
+    MM_Calc_Ins.setOriginCoordinates(MM_Calc_Ins.X2_Target_Value, MM_Calc_Ins.Y2_Target_Value);
+
+    Status = 1;
+    LastState = 3;
+    return (1);}
+       else {
+    Serial.println("S3: Error Case ");  //error case print data
+  
+      Serial.print("S3: Origin:   X1: ");
+    Serial.print(MM_Calc_Ins.X1_Origin_Value);
+    Serial.print(" Y1: ");
+    Serial.println(MM_Calc_Ins.Y1_Origin_Value);
+
+    Serial.print("S3: NextStep: Xz: ");
+    Serial.print(MM_Calc_Ins.Xz_NextStep_Value);
+    Serial.print(" Yz: ");
+    Serial.println(MM_Calc_Ins.Yz_NextStep_Value);
+
+   Serial.print("S3: Target:    X2: ");
+    Serial.print(MM_Calc_Ins.X2_Target_Value);
+    Serial.print(" Y2: ");
+    Serial.println(MM_Calc_Ins.Y2_Target_Value);
+
+    Serial.print("S3: OldAngle: L°: ");
+    Serial.print(Motor_Left_Ins.getOldAngelValue());
+    Serial.print(" R°: ");
+    Serial.println(Motor_Right_Ins.getOldAngelValue());
+
+    Serial.print("S3: NewAngle: L°: ");
+    Serial.print(Motor_Left_Ins.getNewAngelValue());
+    Serial.print(" R°: ");
+    Serial.println(Motor_Right_Ins.getNewAngelValue());
+
+    Serial.print("S3: MinResol:  L: ");
+    Serial.print(MM_Calc_Ins.Min_Resolution_Value);
+    Serial.print(" Max°: ");
+    Serial.print(Motor_Left_Ins.Max_AngDev_Value);
+    Serial.print(" Min°: ");
+    Serial.println(Motor_Left_Ins.Min_AngDev_Value);
+
+    Serial.print("S3: MinResol:  R: ");
+    Serial.print(MM_Calc_Ins.Min_Resolution_Value);
+    Serial.print(" Max°: ");
+    Serial.print(Motor_Right_Ins.Max_AngDev_Value);
+    Serial.print(" Min°: ");
+    Serial.println(Motor_Right_Ins.Min_AngDev_Value);
+
+    Serial.print("S3: L°: ");
+    Serial.print(Motor_Left_Ins.getNewAngelValue());
+    Serial.print(" R°: ");
+    Serial.println(Motor_Right_Ins.getNewAngelValue());
+ 
+  LastState = 3;Status = 3;  return (5);}
+  }
 }
 
 unsigned int WrongCommand()  //State 4, steuert die Motoren
@@ -489,7 +566,7 @@ unsigned int WrongCommand()  //State 4, steuert die Motoren
   Serial.println("------ Wrong Command -------");
   Status = 1;
   return (1);
-    LastState =4;
+  LastState = 4;
 }
 
 unsigned int Error() {  //State 5
@@ -501,11 +578,11 @@ unsigned int Error() {  //State 5
 
 
   Motor_Left_Ins.errorcode = 0;
-    Motor_Right_Ins.errorcode = 0;
+  Motor_Right_Ins.errorcode = 0;
   Status = 1;
 
   return (1);
-    LastState =5;
+  LastState = 5;
 }
 
 
@@ -524,7 +601,8 @@ unsigned int Init() {  // State 6
     Mleft_Alarm_Pin,
     Mleft_Ped_Pin,
     Mleft_Speed_Value,
-    Mleft_DIPSW_Value);
+    Mleft_DIPSW_Value,
+    Transmission_LeftArm_Value);
 
   Serial.print(" Mleft: ");
   M5.lcd.print(" Mleft: ");
@@ -614,7 +692,8 @@ unsigned int Init() {  // State 6
     Mright_Alarm_Pin,
     Mright_Ped_Pin,
     Mright_Speed_Value,
-    Mright_DIPSW_Value);
+    Mright_DIPSW_Value, 
+    Transmission_RightArm_Value);
 
   Serial.print(" Mright: ");
   M5.lcd.print(" Mright: ");
@@ -699,7 +778,7 @@ unsigned int Init() {  // State 6
     MeetingPoint_TipPoint_Value, MeetingPoint_TipPoint_AngleValue,
     DeltaX_LeftArm_Value, DeltaX_RightArm_Value,
     Transmission_LeftArm_Value, Transmission_RightArm_Value);
-  
+
   D2D_LeftArm_Kin.setupDelta2D_Kinematic(
     Lenght_UpArm_Value, Lenght_LowArm_Value,
     MeetingPoint_TipPoint_Value, MeetingPoint_TipPoint_AngleValue,
@@ -710,7 +789,7 @@ unsigned int Init() {  // State 6
   Serial.println("Init: Calculation Succeed");
   M5.lcd.println("Init: Calculation Succeed");
   return (7);
-    LastState =7;
+  LastState = 7;
 }
 
 unsigned int Calibrate() {  //State 7
@@ -727,7 +806,7 @@ unsigned int Calibrate() {  //State 7
   }
 
   //3. move Motor left to position 180°
-  if (Motor_Left_Ins.setOldAngelValue(180)) Serial.println("Motor Left Set Angle: Succeed");
+  if (Motor_Left_Ins.setNewAngelValue(180)) Serial.println("Motor Left Set Angle: Succeed");
   else {
     Serial.println("Motor Left Set Angle: Failed");
     return (5);
@@ -735,6 +814,13 @@ unsigned int Calibrate() {  //State 7
 
   moveToNewPositionLeft();
 
+  if (Motor_Left_Ins.setOldAngelValue(180)) Serial.println("Motor Left Set Angle: Succeed");
+  else {
+    Serial.println("Motor Left Set Angle: Failed");
+    return (5);
+  }
+
+  
   //4. move Motor right to enpoint 2
 
 
@@ -746,15 +832,14 @@ unsigned int Calibrate() {  //State 7
     return (5);
   }
   //6. move to position 0/0
-  MM_Calc_Ins.setTargetCoordinates(Coordinate_0X_Value,Coordinate_0Y_Value);
-
+  MM_Calc_Ins.setTargetCoordinates(Coordinate_0X_Value, Coordinate_0Y_Value);
 
   //inverse Kinematic
 
-
-
   //set origin Coordinates to x0/y0
   MM_Calc_Ins.setOriginCoordinates(Coordinate_0X_Value, Coordinate_0Y_Value);
+
+
 
   Serial.print(" Calibration: New Coordinates: X: ");
   Serial.print(MM_Calc_Ins.X1_Origin_Value);
@@ -769,7 +854,7 @@ unsigned int Calibrate() {  //State 7
 
   Status = 1;
   return (1);
-   LastState =8;
+  LastState = 8;
 }
 
 
