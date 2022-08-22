@@ -306,7 +306,7 @@ double TimeControll(){
 
   //MotorMovement Methodes
   bool moveOneStep(bool direction) {
-    long long counter = 0;
+    unsigned int counter = 0;
 
     if (startSurvilance()) {
       GPIO_I2C_Exp->digitalWrite(Motor_Dir_Pin, direction);  //set direction 1= right 0 =left
@@ -419,9 +419,9 @@ private:
   double Angle_Per_StepB = 0;
 
 public:
-  unsigned long TotalNof_Steps_Value = 0;
-  unsigned long Done_Steps_Value = 0;
-  unsigned long Missing_Steps_Value = 0;
+  unsigned int TotalNof_Steps_Value = 0;
+  unsigned int Done_Steps_Value = 0;
+  unsigned int Missing_Steps_Value = 0;
 
   double Min_Resolution_Value = 0;
   double Time_PerStep_Value = 0;

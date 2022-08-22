@@ -27,11 +27,21 @@
 #include "ModbusIP_ESP8266.h"
 #include "WiFiMulti.h"
 #include <Adafruit_MCP23X17.h>
+#include <Adafruit_PWMServoDriver.h> //
+
 
 
 //=========| definiere Werte |==================================================*/
 #define ON HIGH
 #define OFF LOW
+
+#define UP HIGH
+#define DOWN LOW
+
+#define OPEN HIGH
+#define CLOSE LOW
+
+
 #define baudRate 2000000  //set baud rate for serial communiction
 
 #define WLAN_SSID "Wildbachhuis 2.4"  // define: suchen und ersetzen im Code "L-TEKO"
@@ -51,17 +61,17 @@
 //Robot Measurements:
 #define CoordResolution *100
 
-#define length_BaseToTip_Value 630 CoordResolution // length from the rotation axis to the tool tip in mm
-#define max_TimeForComand_value 60  //maximum time for one command in s
+#define length_BaseToTip_Value 630 CoordResolution  // length from the rotation axis to the tool tip in mm
+#define max_TimeForComand_value 60                  //maximum time for one command in s
 
 
-#define Lenght_UpArm_Value 252 CoordResolution  //length of the  Upper Arm in mm
-#define Lenght_LowArm_Value 333 CoordResolution //length of the  Lower Arm in mm
+#define Lenght_UpArm_Value 252 CoordResolution   //length of the  Upper Arm in mm
+#define Lenght_LowArm_Value 333 CoordResolution  //length of the  Lower Arm in mm
 
-#define MeetingPoint_TipPoint_Value 60 CoordResolution       //length between tip of the tool and meeting point of arms
-#define MeetingPoint_TipPoint_AngleValue 45  //Angle of the line between Meetingpoint to tip of the tool
-#define DeltaX_LeftArm_Value 254 CoordResolution            //Delta X from center to rotation point of the Left Arm
-#define DeltaX_RightArm_Value 404 CoordResolution         //Delta X from center to rotation point of the Right Arm
+#define MeetingPoint_TipPoint_Value 60 CoordResolution  //length between tip of the tool and meeting point of arms
+#define MeetingPoint_TipPoint_AngleValue 45             //Angle of the line between Meetingpoint to tip of the tool
+#define DeltaX_LeftArm_Value 254 CoordResolution        //Delta X from center to rotation point of the Left Arm
+#define DeltaX_RightArm_Value 404 CoordResolution       //Delta X from center to rotation point of the Right Arm
 #define Transmission_LeftArm_Value 2.5
 #define Transmission_RightArm_Value 2.5
 
@@ -73,29 +83,32 @@
 #define Coordinate_0X_Value 150 CoordResolution
 #define Coordinate_0Y_Value 220 CoordResolution
 
-
+#define DC_MotorTime_Value 8000  //ms DC Motor Time
 
 //IOPorts //Adresses of Pins for Adafruit MCP23017
-#define Mright_Pull_Pin 8      //	GPB0	MCP23017
-#define Mright_Dir_Pin 9       //	GPB1	MCP23017
-#define Mright_En_Pin 10       //	GPB2	MCP23017
-#define Mright_Alarm_Pin 11    //	GPB3	MCP23017
-#define Mright_Ped_Pin 12      //	GPB4	MCP23017
-#define Reed_Sensor_Pin 13     //	GPB5	MCP23017
-#define Mvertical_Down_Pin 14  //	GPB6	MCP23017
-#define Mvertical_Up_Pin 15    //	GPB7	MCP23017
-#define Clamp_Servo_Pin 0      //	GPA0	MCP23017
-#define End_Button2_Pin 1      //	GPA1	MCP23017
-#define End_Button1_Pin 2      //	GPA2	MCP23017
-#define Mleft_Ped_Pin 3        //	GPA3	MCP23017
-#define Mleft_Alarm_Pin 4      //	GPA4	MCP23017
-#define Mleft_En_Pin 5         //	GPA5	MCP23017
-#define Mleft_Dir_Pin 6        //	GPA6	MCP23017
-#define Mleft_Pull_Pin 7       //	GPA7	MCP23017
+#define Mright_Pull_Pin 8     //	GPB0	MCP23017
+#define Mright_Dir_Pin 9      //	GPB1	MCP23017
+#define Mright_En_Pin 10      //	GPB2	MCP23017
+#define Mright_Alarm_Pin 11   //	GPB3	MCP23017
+#define Mright_Ped_Pin 12     //	GPB4	MCP23017
+#define Limit_Switch_Pin 13   //	GPB5	MCP23017
+#define Mvertical_ON_Pin 14   //	GPB6	MCP23017
+#define Mvertical_DIR_Pin 15  //	GPB7	MCP23017
+#define Clamp_Servo_Pin 0     //	GPA0	MCP23017
+#define End_Button2_Pin 1     //	GPA1	MCP23017
+#define End_Button1_Pin 2     //	GPA2	MCP23017
+#define Mleft_Ped_Pin 3       //	GPA3	MCP23017
+#define Mleft_Alarm_Pin 4     //	GPA4	MCP23017
+#define Mleft_En_Pin 5        //	GPA5	MCP23017
+#define Mleft_Dir_Pin 6       //	GPA6	MCP23017
+#define Mleft_Pull_Pin 7      //	GPA7	MCP23017
 
-
-
-
+//Define Servos Clamp
+#define SERVOMIN  150 // This is the 'minimum' pulse length count (out of 4096)
+#define SERVOMAX  600 // This is the 'maximum' pulse length count (out of 4096)
+#define USMIN  600 // This is the rounded 'minimum' microsecond length based on the minimum pulse of 150
+#define USMAX  2400 // This is the rounded 'maximum' microsecond length based on the maximum pulse of 600
+#define SERVO_FREQ 50 // Analog servos run at ~50 Hz updates
 
 //Sensors:
 
@@ -119,7 +132,7 @@ Closed_Loop_Step_Motor Motor_Right_Ins(&GPIO_Ports_Instanz);  //creating the Rig
 Motor_Movement_Calc MM_Calc_Ins;                              //create the motor movement calculation instance
 Delta2D_Kinematic D2D_RightArm_Kin;                           //create the Kinematic Calculation instance
 Delta2D_Kinematic D2D_LeftArm_Kin;                            //create the Kinematic Calculation instance
-
+Adafruit_PWMServoDriver pwm_Ports_Instanz = Adafruit_PWMServoDriver(); // called this way, it uses the default address 0x40
 //==============================================================================*/
 //=========| deklaration von Variabeln |========================================*/
 unsigned int programSelector = 6;  //Program selection variable
@@ -131,15 +144,12 @@ bool Start_StateMachine = false;
 unsigned int Status = 1;  // 1 ready
 uint Befehl = 0;
 
-
 //Timer Variabeln:
 unsigned long Timer_Start_01;
 unsigned long Timer_Start_02;
 
-
 unsigned long Timer_Interval_01 = 1000000;
 unsigned long Timer_Interval_02 = 10000;
-
 
 //ModBus
 
@@ -150,14 +160,13 @@ unsigned long Py, Yaktuell, Yneu;
 
 
 // Motor Variabeln
-long Mright_Speed_Value = 1;  //initial Motor Speed in RPM
-long Mleft_Speed_Value = 1;   //initial Motor Speed in RPM
+int Mright_Speed_Value = 1;  //initial Motor Speed in RPM
+int Mleft_Speed_Value = 1;   //initial Motor Speed in RPM
 
 //==============================================================================*/
 //=========| Funktionen ModBus |=========================================*/
 
 //Return new GCode_Command ReadModbusRegister CBneuerBefehl
-
 
 //Return new Client_Command ReadModbusRegister CBneuerBefehl
 uint16_t CBneuerBefehl(TRegister* reg, uint16_t val) {
@@ -241,37 +250,37 @@ void moveToNewPosition() {
   unsigned long counterTollerance = 0;
   //unsigned long counter = 0;
   //double TotalTimeL = 0;
- // double TotalTimeR = 0;
+  // double TotalTimeR = 0;
 
   bool exitStep = false;
 
 
   do {
     //   Serial.print(" Number of Steps: ");
-       counterTollerance++;
- /* Motor_Left_Ins.StartTimer();
+    counterTollerance++;
+    /* Motor_Left_Ins.StartTimer();
   Motor_Right_Ins.StartTimer();*/
 
     do {  //do one step
-      
+
       if (Motor_Right_Ins.OneStepDir() == 0) exitStep = false;
       else { exitStep = true; }
       if (Motor_Right_Ins.errorcode > 0) exitStep = true;
 
     } while (exitStep == false);
     do {  //do one step
-      
+
       if (Motor_Left_Ins.OneStepDir() == 0) exitStep = false;
-      else {   exitStep = true;      }
+      else { exitStep = true; }
       if (Motor_Left_Ins.errorcode > 0) exitStep = true;
     } while (exitStep == false);
-/*counter++;
+    /*counter++;
 TotalTimeL= TotalTimeL + Motor_Left_Ins.TimeControll();*/
-//TotalTimeR= TotalTimeR + Motor_Right_Ins.TimeControll();
+    //TotalTimeR= TotalTimeR + Motor_Right_Ins.TimeControll();
 
 
   } while (!Motor_Right_Ins.Angle_Tollerance_Value or !Motor_Left_Ins.Angle_Tollerance_Value);
- /*  Serial.println("");
+  /*  Serial.println("");
   Serial.print("mTNP: Step Time L: ");
   Serial.println(TotalTimeL/counter);
   Serial.print(" R: ");
@@ -281,10 +290,77 @@ TotalTimeL= TotalTimeL + Motor_Left_Ins.TimeControll();*/
   Serial.println("mTNP: Both Angle in Tollerance: ");
   Motor_Left_Ins.setNewAngelValue(Motor_Left_Ins.getOldAngelValue());
   Motor_Right_Ins.setNewAngelValue(Motor_Right_Ins.getOldAngelValue());
-  
-  counterTollerance = 0;
 
+  counterTollerance = 0;
 }
+
+//Z-Axis
+bool controllZAxis(bool dir_DCMotor_val, unsigned long RunTime) {
+  unsigned long startTime = 0;
+
+  Serial.print("ZAX: End Button: ");
+  Serial.println(GPIO_Ports_Instanz.digitalRead(Limit_Switch_Pin));
+
+  if (dir_DCMotor_val and GPIO_Ports_Instanz.digitalRead(Limit_Switch_Pin))  //hoch
+  {
+
+  Serial.println("ZAX: UP: ");
+  Serial.print("ZAX: Button: ");  
+   Serial.println(GPIO_Ports_Instanz.digitalRead(Limit_Switch_Pin));
+  Serial.print("ZAX: dir_DCMotor_val: ");
+  Serial.println(dir_DCMotor_val);
+  
+    GPIO_Ports_Instanz.digitalWrite((Mvertical_DIR_Pin), HIGH);
+    GPIO_Ports_Instanz.digitalWrite(Mvertical_ON_Pin, HIGH);
+
+    do {  Serial.print("^");
+    } while (GPIO_Ports_Instanz.digitalRead(Limit_Switch_Pin));
+       GPIO_Ports_Instanz.digitalWrite(Mvertical_ON_Pin, LOW);
+
+  } else if (!dir_DCMotor_val and !GPIO_Ports_Instanz.digitalRead(Limit_Switch_Pin))  //runter
+  {
+  Serial.println("ZAX: DOWN: ");
+   Serial.print("ZAX: Button: ");  
+   Serial.println(GPIO_Ports_Instanz.digitalRead(Limit_Switch_Pin));
+  Serial.print("ZAX: dir_DCMotor_val: ");
+  Serial.println(dir_DCMotor_val);
+
+    GPIO_Ports_Instanz.digitalWrite((Mvertical_DIR_Pin), LOW);
+    GPIO_Ports_Instanz.digitalWrite(Mvertical_ON_Pin, HIGH);  //Motor Ein
+    startTime = millis();
+    Serial.print("ZAX: Time: ");
+    Serial.println(millis() - startTime);
+     Serial.print(" < ");
+    Serial.println(RunTime);
+
+    do {Serial.print("v: "); Serial.println(millis() - startTime);
+    } while ((millis() - startTime < RunTime));
+    GPIO_Ports_Instanz.digitalWrite(Mvertical_ON_Pin, LOW);  //Motor Ein
+  } else {
+    return (1);
+  };
+
+  return (1);
+}
+
+
+//Clamp
+bool controllClamp(bool dir_clamp_value)//close: 0 open : 1
+{
+  //close clamp
+  if (!dir_clamp_value){
+ for (uint16_t pulselength = SERVOMIN; pulselength < SERVOMAX; pulselength++) {
+    pwm_Ports_Instanz.setPWM(1, 0, pulselength);
+  }
+}  //open clamp
+  if (dir_clamp_value){
+  for (uint16_t pulselength = SERVOMAX; pulselength > SERVOMIN; pulselength--) {
+    pwm_Ports_Instanz.setPWM(1, 0, pulselength);
+   }
+   }
+     return (1);
+}
+
 
 //=========| Funktionen StateMachine |=========================================*/
 
@@ -309,7 +385,6 @@ unsigned int Standby()  //State 1
     Serial.println(Start_StateMachine);
   }
   //GPIO_Ports_Instanz.digitalWrite(Clamp_Servo_Pin, HIGH);
-
 
   LastState = 1;
   return (programSelector);
@@ -346,7 +421,7 @@ unsigned int Receive()  //State 2 Verarbeitung
       MM_Calc_Ins.setTargetCoordinates(X, Y);
 
       MM_Calc_Ins.Done_Steps_Value = 0;
-
+ LastState = 2;
       Status = 2;  // gehe zu draw
       return (3);
 
@@ -377,6 +452,7 @@ unsigned int Receive()  //State 2 Verarbeitung
 
     } else {
       Status = 3;  // falscher Befehl
+       LastState = 2;
       return (4);
     }
   }
@@ -386,7 +462,7 @@ unsigned int Receive()  //State 2 Verarbeitung
     Timer_Start_01 = micros();
     Timer_Interval_01 = 1000000;
   }*/
-  LastState = 2;
+ 
 }
 
 unsigned int Draw() {  //State 3
@@ -395,6 +471,19 @@ unsigned int Draw() {  //State 3
   double new_Angle_value = 0;
   unsigned long determinant_RightArm_Value = 0;
   unsigned long determinant_LeftArm_Value = 0;
+
+if (Befehl==0){
+  Serial.print(" S3: DC Motor Up: ");
+
+  do { Serial.print("^"); } while (!controllZAxis(UP, DC_MotorTime_Value));
+  Serial.println("");
+}
+if (Befehl==1){
+  Serial.print(" S3: DC Motor Down: ");
+
+  do { Serial.print("."); } while (!controllZAxis(DOWN, DC_MotorTime_Value));
+  Serial.println("");
+}
 
   //delay(500);
   //1.Step: LED Blink,
@@ -461,9 +550,17 @@ moveToNewPositionRight();
   //8.Step: if the current coordinates are not equal to the target coordinates do the loop again
   else if ((MM_Calc_Ins.Xz_NextStep_Value < MM_Calc_Ins.X2_Target_Value) and (MM_Calc_Ins.Yz_NextStep_Value < MM_Calc_Ins.Y2_Target_Value)) {
 
-  
-    if ((MM_Calc_Ins.Xz_NextStep_Value == 0) or (MM_Calc_Ins.Yz_NextStep_Value == 0)) { Serial.println(" :18: ");Status =3;  LastState = 3; return (5);}
-    else {   Status = 2;      LastState = 3;      return (3);    }
+
+    if ((MM_Calc_Ins.Xz_NextStep_Value == 0) or (MM_Calc_Ins.Yz_NextStep_Value == 0)) {
+      Serial.println(" :18: ");
+      Status = 3;
+      LastState = 3;
+      return (5);
+    } else {
+      Status = 2;
+      LastState = 3;
+      return (3);
+    }
 
   } else if ((MM_Calc_Ins.Xz_NextStep_Value == MM_Calc_Ins.X2_Target_Value) and (MM_Calc_Ins.Yz_NextStep_Value == MM_Calc_Ins.Y2_Target_Value)) {
     //9.Step: if the Target Coordinates are equal to the current coordinates, go to state 1
@@ -482,81 +579,83 @@ moveToNewPositionRight();
     Status = 1;
     LastState = 3;
     return (1);
-  }
-  else{
-    
-    if(MM_Calc_Ins.Done_Steps_Value<MM_Calc_Ins.TotalNof_Steps_Value){
+  } else {
 
-  Serial.print("S3: Coordinates and Angle Match -> go to next Interpolate Step. ");
+    if (MM_Calc_Ins.Done_Steps_Value < MM_Calc_Ins.TotalNof_Steps_Value) {
 
-     Status = 2;      LastState = 3;      return (3); 
-     }
-     else if (MM_Calc_Ins.Done_Steps_Value==MM_Calc_Ins.TotalNof_Steps_Value)
-    {
+      Serial.print("S3: Coordinates and Angle Match -> go to next Interpolate Step. ");
 
-        Serial.print("S3: Interpolate Steps Finished: Xz ");
-    Serial.print(MM_Calc_Ins.Xz_NextStep_Value);
-    Serial.print("Yz ");
-    Serial.print(MM_Calc_Ins.Yz_NextStep_Value);
-    Serial.print(" / X2 ");
-    Serial.print(MM_Calc_Ins.X2_Target_Value);
-    Serial.print(" / Y2 ");
-    Serial.println(MM_Calc_Ins.Y2_Target_Value);
-    Serial.print("S3:  Waiting for new Coordinates ");
+      Status = 2;
+      LastState = 3;
+      return (3);
+    } else if (MM_Calc_Ins.Done_Steps_Value == MM_Calc_Ins.TotalNof_Steps_Value) {
 
-    MM_Calc_Ins.setOriginCoordinates(MM_Calc_Ins.X2_Target_Value, MM_Calc_Ins.Y2_Target_Value);
+      Serial.print("S3: Interpolate Steps Finished: Xz ");
+      Serial.print(MM_Calc_Ins.Xz_NextStep_Value);
+      Serial.print("Yz ");
+      Serial.print(MM_Calc_Ins.Yz_NextStep_Value);
+      Serial.print(" / X2 ");
+      Serial.print(MM_Calc_Ins.X2_Target_Value);
+      Serial.print(" / Y2 ");
+      Serial.println(MM_Calc_Ins.Y2_Target_Value);
+      Serial.print("S3:  Waiting for new Coordinates ");
 
-    Status = 1;
-    LastState = 3;
-    return (1);}
-       else {
-    Serial.println("S3: Error Case ");  //error case print data
-  
+      MM_Calc_Ins.setOriginCoordinates(MM_Calc_Ins.X2_Target_Value, MM_Calc_Ins.Y2_Target_Value);
+
+      Status = 1;
+      LastState = 3;
+      return (1);
+    } else {
+      Serial.println("S3: Error Case ");  //error case print data
+
       Serial.print("S3: Origin:   X1: ");
-    Serial.print(MM_Calc_Ins.X1_Origin_Value);
-    Serial.print(" Y1: ");
-    Serial.println(MM_Calc_Ins.Y1_Origin_Value);
+      Serial.print(MM_Calc_Ins.X1_Origin_Value);
+      Serial.print(" Y1: ");
+      Serial.println(MM_Calc_Ins.Y1_Origin_Value);
 
-    Serial.print("S3: NextStep: Xz: ");
-    Serial.print(MM_Calc_Ins.Xz_NextStep_Value);
-    Serial.print(" Yz: ");
-    Serial.println(MM_Calc_Ins.Yz_NextStep_Value);
+      Serial.print("S3: NextStep: Xz: ");
+      Serial.print(MM_Calc_Ins.Xz_NextStep_Value);
+      Serial.print(" Yz: ");
+      Serial.println(MM_Calc_Ins.Yz_NextStep_Value);
 
-   Serial.print("S3: Target:    X2: ");
-    Serial.print(MM_Calc_Ins.X2_Target_Value);
-    Serial.print(" Y2: ");
-    Serial.println(MM_Calc_Ins.Y2_Target_Value);
+      Serial.print("S3: Target:    X2: ");
+      Serial.print(MM_Calc_Ins.X2_Target_Value);
+      Serial.print(" Y2: ");
+      Serial.println(MM_Calc_Ins.Y2_Target_Value);
 
-    Serial.print("S3: OldAngle: L°: ");
-    Serial.print(Motor_Left_Ins.getOldAngelValue());
-    Serial.print(" R°: ");
-    Serial.println(Motor_Right_Ins.getOldAngelValue());
+      Serial.print("S3: OldAngle: L°: ");
+      Serial.print(Motor_Left_Ins.getOldAngelValue());
+      Serial.print(" R°: ");
+      Serial.println(Motor_Right_Ins.getOldAngelValue());
 
-    Serial.print("S3: NewAngle: L°: ");
-    Serial.print(Motor_Left_Ins.getNewAngelValue());
-    Serial.print(" R°: ");
-    Serial.println(Motor_Right_Ins.getNewAngelValue());
+      Serial.print("S3: NewAngle: L°: ");
+      Serial.print(Motor_Left_Ins.getNewAngelValue());
+      Serial.print(" R°: ");
+      Serial.println(Motor_Right_Ins.getNewAngelValue());
 
-    Serial.print("S3: MinResol:  L: ");
-    Serial.print(MM_Calc_Ins.Min_Resolution_Value);
-    Serial.print(" Max°: ");
-    Serial.print(Motor_Left_Ins.Max_AngDev_Value);
-    Serial.print(" Min°: ");
-    Serial.println(Motor_Left_Ins.Min_AngDev_Value);
+      Serial.print("S3: MinResol:  L: ");
+      Serial.print(MM_Calc_Ins.Min_Resolution_Value);
+      Serial.print(" Max°: ");
+      Serial.print(Motor_Left_Ins.Max_AngDev_Value);
+      Serial.print(" Min°: ");
+      Serial.println(Motor_Left_Ins.Min_AngDev_Value);
 
-    Serial.print("S3: MinResol:  R: ");
-    Serial.print(MM_Calc_Ins.Min_Resolution_Value);
-    Serial.print(" Max°: ");
-    Serial.print(Motor_Right_Ins.Max_AngDev_Value);
-    Serial.print(" Min°: ");
-    Serial.println(Motor_Right_Ins.Min_AngDev_Value);
+      Serial.print("S3: MinResol:  R: ");
+      Serial.print(MM_Calc_Ins.Min_Resolution_Value);
+      Serial.print(" Max°: ");
+      Serial.print(Motor_Right_Ins.Max_AngDev_Value);
+      Serial.print(" Min°: ");
+      Serial.println(Motor_Right_Ins.Min_AngDev_Value);
 
-    Serial.print("S3: L°: ");
-    Serial.print(Motor_Left_Ins.getNewAngelValue());
-    Serial.print(" R°: ");
-    Serial.println(Motor_Right_Ins.getNewAngelValue());
- 
-  LastState = 3;Status = 3;  return (5);}
+      Serial.print("S3: L°: ");
+      Serial.print(Motor_Left_Ins.getNewAngelValue());
+      Serial.print(" R°: ");
+      Serial.println(Motor_Right_Ins.getNewAngelValue());
+
+      LastState = 3;
+      Status = 3;
+      return (5);
+    }
   }
 }
 
@@ -691,7 +790,7 @@ unsigned int Init() {  // State 6
     Mright_Alarm_Pin,
     Mright_Ped_Pin,
     Mright_Speed_Value,
-    Mright_DIPSW_Value, 
+    Mright_DIPSW_Value,
     Transmission_RightArm_Value);
 
   Serial.print(" Mright: ");
@@ -792,8 +891,74 @@ unsigned int Init() {  // State 6
 }
 
 unsigned int Calibrate() {  //State 7
+  unsigned int counterLeft = 10;
+  unsigned int counterRight = 0;
+  unsigned int counter = Motor_Left_Ins.Steps_Per_rev / 8;
+bool stateControlZAxisDown;
   Serial.println("------ Calibration -------");
+
+
+//Close Clamp
+
+ Serial.println(" CAL: Close Clamp ");
+
+  for (uint16_t pulselength = SERVOMIN; pulselength < SERVOMAX; pulselength++) {
+    pwm_Ports_Instanz.setPWM(1, 0, pulselength);
+  }
+
+//Open Clamp
+  delay(500);
+
+   Serial.println(" CAL: Open Clamp ");
+   controllClamp(OPEN);
+
+  for (uint16_t pulselength = SERVOMAX; pulselength > SERVOMIN; pulselength--) {
+    pwm_Ports_Instanz.setPWM(1, 0, pulselength);
+  }
+
+  delay(500);
+
+
+
+
+  Serial.print(" CAL: DC Motor Down: ");
+
+  do { /*Serial.print(".");*/
+  stateControlZAxisDown=controllZAxis(DOWN, DC_MotorTime_Value);
+  Serial.print("stateControlZAxisDown: ");
+  Serial.println(stateControlZAxisDown);
+  
+   } while (stateControlZAxisDown == 0);
+  Serial.println("");
+
+
+  //Z-Axis UP
+  Serial.print(" CAL: DC Motor Up: ");
+
+  do { Serial.print("^"); } while (!controllZAxis(UP, DC_MotorTime_Value));
+  Serial.println("");
+
   //1. move Motor left to endpoint 1
+  Serial.print(" CAL: Motor Left to endpoint 1: ");
+  Serial.print(GPIO_Ports_Instanz.digitalRead(End_Button2_Pin));
+
+  do {
+
+    do {
+      Motor_Left_Ins.moveOneStep(Motor_Turn_left);
+      counterLeft++;
+    } while ((counterLeft < counter) and GPIO_Ports_Instanz.digitalRead(End_Button2_Pin));
+
+    do {
+      Motor_Left_Ins.moveOneStep(Motor_Turn_right);
+      counterRight++;
+    } while ((counterRight < (counter + 1)) and GPIO_Ports_Instanz.digitalRead(End_Button2_Pin));
+
+    counterRight = 0;
+    counter = counter + 2;
+
+  } while ((GPIO_Ports_Instanz.digitalRead(End_Button2_Pin)));
+  Serial.println(GPIO_Ports_Instanz.digitalRead(End_Button2_Pin));
 
 
   //2.save Angle of Motor left
@@ -818,8 +983,31 @@ unsigned int Calibrate() {  //State 7
     Serial.println("Motor Left Set Angle: Failed");
     return (5);
   }
- 
+
   //4. move Motor right to enpoint 2
+  counter = Motor_Left_Ins.Steps_Per_rev / 4;
+
+  Serial.print(" CAL: Motor Right to endpoint 2: ");
+  Serial.print(GPIO_Ports_Instanz.digitalRead(End_Button1_Pin));
+  Serial.print(GPIO_Ports_Instanz.digitalRead(Mright_Ped_Pin));
+
+  do {
+
+    do {
+      Motor_Right_Ins.moveOneStep(Motor_Turn_left);
+      counterLeft++;
+    } while ((counterLeft < counter) and GPIO_Ports_Instanz.digitalRead(End_Button1_Pin));
+
+    do {
+      Motor_Right_Ins.moveOneStep(Motor_Turn_right);
+      counterRight++;
+    } while ((counterRight < (counter + 5)) and GPIO_Ports_Instanz.digitalRead(End_Button1_Pin));
+    counterLeft = 0;
+    //counterRight = 0;
+    counter = counter + Motor_Left_Ins.Steps_Per_rev / 8;
+
+  } while ((GPIO_Ports_Instanz.digitalRead(End_Button1_Pin)));
+  Serial.println(GPIO_Ports_Instanz.digitalRead(End_Button1_Pin));
 
 
   //5. save position of Motor Right
@@ -850,7 +1038,6 @@ unsigned int Calibrate() {  //State 7
   Status = 1;
   LastState = 8;
   return (1);
-
 }
 
 
@@ -877,6 +1064,9 @@ void setup() {
     while (1)
       ;
   }
+
+
+
   //Pinconfiguration :
   Serial.println("-I2C_ Set Input/Output Pins");
   M5.lcd.println("-I2C_ Set Input/Output Pins ");
@@ -886,9 +1076,9 @@ void setup() {
   GPIO_Ports_Instanz.pinMode(Mright_En_Pin, OUTPUT);           //	En + BrownBlack Motor Left&Right
   GPIO_Ports_Instanz.pinMode(Mright_Alarm_Pin, INPUT_PULLUP);  //	Alarm+ Whiteblack Motor Left
   GPIO_Ports_Instanz.pinMode(Mright_Ped_Pin, INPUT_PULLUP);    //	Ped+ GreenBlack Motor Left
-  GPIO_Ports_Instanz.pinMode(Reed_Sensor_Pin, INPUT_PULLUP);   //	Reed / Push Sensor
-  GPIO_Ports_Instanz.pinMode(Mvertical_Down_Pin, OUTPUT);      //	Vertical Down
-  GPIO_Ports_Instanz.pinMode(Mvertical_Up_Pin, OUTPUT);        //	Vertical Up
+  GPIO_Ports_Instanz.pinMode(Limit_Switch_Pin, INPUT_PULLUP);  //	Reed / Push Sensor
+  GPIO_Ports_Instanz.pinMode(Mvertical_ON_Pin, OUTPUT);        //	Vertical Down
+  GPIO_Ports_Instanz.pinMode(Mvertical_DIR_Pin, OUTPUT);       //	Vertical Up
   GPIO_Ports_Instanz.pinMode(Clamp_Servo_Pin, OUTPUT);         //	Clamp Orange Servo
   GPIO_Ports_Instanz.pinMode(End_Button2_Pin, INPUT_PULLUP);   //	End_Button 2 left
   GPIO_Ports_Instanz.pinMode(End_Button1_Pin, INPUT_PULLUP);   //	End_Button 1 right
@@ -897,6 +1087,7 @@ void setup() {
   GPIO_Ports_Instanz.pinMode(Mleft_En_Pin, OUTPUT);            //	En + BrownBlack Motor Left&Right
   GPIO_Ports_Instanz.pinMode(Mleft_Dir_Pin, OUTPUT);           //	Dir+ White Motor Left
   GPIO_Ports_Instanz.pinMode(Mleft_Pull_Pin, OUTPUT);          //	Pull+ Blue Motor Left
+
 
 
   Serial.println("-I2C: Turn on LED 15");
@@ -912,6 +1103,15 @@ void setup() {
 
 
 
+  Serial.println("-I2C - Succeed");
+  M5.lcd.println("I2C - Succeed");
+  Serial.println("-I2C - add PWM Port");
+  M5.lcd.println("I2C - add PWM Port");
+//start PWM board
+    pwm_Ports_Instanz.begin();
+
+    pwm_Ports_Instanz.setOscillatorFrequency(27000000);
+    pwm_Ports_Instanz.setPWMFreq(SERVO_FREQ); 
 
   Serial.println("-Start: I2C - Succeed");
   M5.lcd.println("-Start: I2C - Succeed");
