@@ -195,6 +195,7 @@ uint16_t CBneuerParameterY(TRegister* reg, uint16_t val) {
 uint16_t CBneuerParameterZ(TRegister* reg, uint16_t val) {
   Serial.println("Neue Parameter Z!");
   Z = mb.Hreg(Z_HREG);
+
   LastState = 0;
   return val;
 }
@@ -472,18 +473,19 @@ unsigned int Draw() {  //State 3
   unsigned long determinant_RightArm_Value = 0;
   unsigned long determinant_LeftArm_Value = 0;
 
-if (Befehl==0){
+if (Z>0){
   Serial.print(" S3: DC Motor Up: ");
 
   do { Serial.print("^"); } while (!controllZAxis(UP, DC_MotorTime_Value));
   Serial.println("");
 }
-if (Befehl==1){
+if (Z==0){
   Serial.print(" S3: DC Motor Down: ");
 
-  do { Serial.print("."); } while (!controllZAxis(DOWN, DC_MotorTime_Value));
+  do { Serial.print("v"); } while (!controllZAxis(DOWN, DC_MotorTime_Value));
   Serial.println("");
 }
+
 
   //delay(500);
   //1.Step: LED Blink,
