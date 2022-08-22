@@ -314,7 +314,7 @@ bool controllZAxis(bool dir_DCMotor_val, unsigned long RunTime) {
     GPIO_Ports_Instanz.digitalWrite((Mvertical_DIR_Pin), HIGH);
     GPIO_Ports_Instanz.digitalWrite(Mvertical_ON_Pin, HIGH);
 
-    do {  Serial.print("^");
+    do {  
     } while (GPIO_Ports_Instanz.digitalRead(Limit_Switch_Pin));
        GPIO_Ports_Instanz.digitalWrite(Mvertical_ON_Pin, LOW);
 
@@ -329,12 +329,8 @@ bool controllZAxis(bool dir_DCMotor_val, unsigned long RunTime) {
     GPIO_Ports_Instanz.digitalWrite((Mvertical_DIR_Pin), LOW);
     GPIO_Ports_Instanz.digitalWrite(Mvertical_ON_Pin, HIGH);  //Motor Ein
     startTime = millis();
-    Serial.print("ZAX: Time: ");
-    Serial.println(millis() - startTime);
-     Serial.print(" < ");
-    Serial.println(RunTime);
 
-    do {Serial.print("v: "); Serial.println(millis() - startTime);
+    do {
     } while ((millis() - startTime < RunTime));
     GPIO_Ports_Instanz.digitalWrite(Mvertical_ON_Pin, LOW);  //Motor Ein
   } else {
@@ -476,14 +472,14 @@ unsigned int Draw() {  //State 3
 if (Z>0){
   Serial.print(" S3: DC Motor Up: ");
 
-  do { Serial.print("^"); } while (!controllZAxis(UP, DC_MotorTime_Value));
-  Serial.println("");
+  do { } while (!controllZAxis(UP, DC_MotorTime_Value));
+  Serial.println("^");
 }
 if (Z==0){
   Serial.print(" S3: DC Motor Down: ");
 
-  do { Serial.print("v"); } while (!controllZAxis(DOWN, DC_MotorTime_Value));
-  Serial.println("");
+  do { } while (!controllZAxis(DOWN, DC_MotorTime_Value));
+  Serial.println("v");
 }
 
 
