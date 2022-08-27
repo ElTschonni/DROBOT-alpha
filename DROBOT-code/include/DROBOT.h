@@ -604,12 +604,18 @@ private:
   unsigned long Lenght_UpArm_Value = 0;   //length of the Left Upper Arm in mm
   unsigned long Lenght_LowArm_Value = 0;  //length of the Left Lower Arm in mm
 
-  unsigned long MeetingPoint_TipPoint_Value = 0;  //length between tip of the tool and meeting point of arms
+    unsigned long rK1_LowArm_Value = 0;  //length the Circle Radius 1
+
+
+  double MeetingPoint_TipPoint_Value = 0;  //length between tip of the tool and meeting point of arms
   double MeetingPoint_TipPoint_AngleValue = 0;    //Angle of the line between Meetingpoint to tip of the tool
+  double vi_angleToolTip_value = 0;
   unsigned long DeltaX_LeftArm_Value = 0;         //Delta X from center to rotation point of the Left Arm
   unsigned long DeltaX_RightArm_Value = 0;        //Delta X from center to rotation point of the Right Arm
   double Transmission_LeftArm_Value = 0;
   double Transmission_RightArm_Value = 0;
+  bool TolOffSet_true = 0;
+
 
 public:
   double Circle1_Middle_X = 0;  // Middle Point coordianetes X of Circle 1
@@ -627,21 +633,49 @@ public:
   double angle_RightArm_Value1 = 0;
   double angle_RightArm_Value2 = 0;
 
+  double Xz_newRightArm_Value = 0;
+  double Yz_newRightArm_Value = 0;
+
   //Methodes:
   void setupDelta2D_Kinematic(
     unsigned long LUArm,
     unsigned long LLArm,
+    bool SetTool,
     unsigned long MPTipP,
     double MPTipPAngle,
     unsigned long DXLArm,
     unsigned long DXRArm,
     double TransLArm,
     double TransRArm) {
+
+ TolOffSet_true = SetTool;
     Lenght_UpArm_Value = LUArm;   //length of the Left Upper Arm in mm
-    Lenght_LowArm_Value = LLArm;  //length of the Left Lower Arm in mm
+              
+    if (TolOffSet_true){
+      rK1_LowArm_Value = sqrt(MPTipP*MPTipP*1.00+LLArm*LLArm*1.00-2.00*MPTipP*LLArm*cos(MPTipPAngle*DEG_TO_RAD));
+      //60^2+333^2-2*60*33*cos(100)=348.465
+       }
+
+
+
+   Serial.print("SD2D: MPTipP*MPTipP: ");
+    Serial.print(MPTipP*MPTipP);
+      Serial.print(" + ");
+    Serial.print(LLArm*LLArm);
+         Serial.print(" - ");
+    Serial.print(2*MPTipP*LLArm);
+             Serial.print(" * ");
+    Serial.println(cos(MPTipPAngle*DEG_TO_RAD));
+
+     Serial.print("SD2D: rK1_LowArm_Value: ");
+    Serial.println(rK1_LowArm_Value);
+
+Lenght_LowArm_Value = LLArm;  //length of the Left Lower Arm in mm
 
     MeetingPoint_TipPoint_Value = MPTipP;            //length between tip of the tool and meeting point of arms
+    
     MeetingPoint_TipPoint_AngleValue = MPTipPAngle;  //Angle of the line between Meetingpoint to tip of the tool
+
     DeltaX_LeftArm_Value = DXLArm;                   //Delta X from center to rotation point of the Left Arm
     DeltaX_RightArm_Value = DXRArm;                  //Delta X from center to rotation point of the Right Arm
     Transmission_LeftArm_Value = TransLArm;
@@ -649,12 +683,17 @@ public:
 
     Serial.print("SD2D: L_UpArm_Value: ");
     Serial.println(Lenght_UpArm_Value);
+
     Serial.print("SD2D: L_LowArm_Value: ");
     Serial.println(Lenght_LowArm_Value);
-    Serial.print("SD2D: R_UpArm_Value: ");
+    Serial.print("SD2D: L_UpArm_Value: ");
+    Serial.println(Lenght_UpArm_Value);
+
+    Serial.print("SD2D: MeetingPoint_TipPoint_Value: ");
     Serial.println(MeetingPoint_TipPoint_Value);
     Serial.print("SD2D: MeetingPoint_TipPoint_AngleValue: ");
     Serial.println(MeetingPoint_TipPoint_AngleValue);
+
     Serial.print("SD2D: DeltaX_LeftArm_Value: ");
     Serial.println(DeltaX_LeftArm_Value);
     Serial.print("SD2D: DeltaX_RightArm_Value:  ");
@@ -696,7 +735,10 @@ public:
     Line_S1S2_m = (Circle1_Middle_X * 1.00 - Circle2_Middle_X * 1.00) / ((Circle2_Middle_Y * 1.00 - Circle1_Middle_Y * 1.00));
 
     UpArm2 = Lenght_UpArm_Value * Lenght_UpArm_Value * 1.00;
-    LowArm2 = Lenght_LowArm_Value * Lenght_LowArm_Value;
+    
+    if(TolOffSet_true) LowArm2 = rK1_LowArm_Value * rK1_LowArm_Value;
+    else{ LowArm2 = Lenght_LowArm_Value * Lenght_LowArm_Value;    }
+    
     Y2 = Circle2_Middle_Y * Circle2_Middle_Y;
     Y1 = Circle1_Middle_Y * Circle1_Middle_Y;
     X2 = Circle2_Middle_X * Circle2_Middle_X;
@@ -803,6 +845,7 @@ public:
   }
 
   void InverseKinematic(bool WhichArm)  //Left Arm = 0, Right Arm = 1
+
   {
 
     if (WhichArm == right_Arm) {
@@ -858,6 +901,91 @@ public:
       Serial.println(")");*/
     }
   }
+
+void RecalcCoordinates(
+unsigned long X,
+unsigned long Y)
+ {
+//Calculate Px/y_target_coord
+double Px_target_coord;
+double Py_target_coord;
+//lenght upperArm Value == c
+double rr_radiusR_value =0;
+
+double vR_MRightToTool_vector =0;
+
+Px_target_coord =X;
+Py_target_coord =Y;
+
+double vcx_SP1_value = Intersection_I1_X-Circle1_Middle_X;
+double vcy_SP1_value = Intersection_I1_Y-Circle1_Middle_Y;
+double vrx_P0_value = Px_target_coord - Intersection_I1_X;
+double vry_P0_value = Py_target_coord - Intersection_I1_Y;
+double divisorCOS = 0;
+double MeetingPoint_TipPoint_Value2 = MeetingPoint_TipPoint_Value*MeetingPoint_TipPoint_Value;
+double rK1_LowArm_Value2 = rK1_LowArm_Value*rK1_LowArm_Value;
+double Lenght_LowArm_Value2 = Lenght_LowArm_Value*Lenght_LowArm_Value;
+
+//calculate  the angle vi of the circle 1 to ToolTip
+
+divisorCOS= (2.00*rK1_LowArm_Value*MeetingPoint_TipPoint_Value);
+Serial.print("RC: 2* rK1_LowArm_Value: ");
+Serial.print(rK1_LowArm_Value);
+Serial.print(" * ");
+Serial.print(MeetingPoint_TipPoint_Value);
+Serial.print(" = ");
+Serial.println(divisorCOS);
+
+MeetingPoint_TipPoint_Value2 = MeetingPoint_TipPoint_Value*MeetingPoint_TipPoint_Value;
+
+vi_angleToolTip_value = acos((MeetingPoint_TipPoint_Value2+rK1_LowArm_Value2-Lenght_LowArm_Value2)/divisorCOS);
+
+Serial.print("RC: vi_angleToolTip_value: ");
+Serial.print(MeetingPoint_TipPoint_Value2);
+
+Serial.print(" + ");
+Serial.print(rK1_LowArm_Value2);
+
+Serial.print(" - ");
+Serial.print(Lenght_LowArm_Value2);
+
+Serial.print(" / ");
+Serial.print(divisorCOS);
+Serial.print(" = ");
+Serial.println(vi_angleToolTip_value);
+
+//Calculate v1
+
+Xz_newRightArm_Value = Circle1_Middle_X + vcx_SP1_value + vrx_P0_value + MeetingPoint_TipPoint_Value * cos((360-vi_angleToolTip_value)*DEG_TO_RAD);
+Serial.print("RC: Xz_newRightArm_Value: ");
+Serial.print(Circle1_Middle_X);
+Serial.print(" + ");
+Serial.print(vcx_SP1_value);
+Serial.print(" + ");
+Serial.print(vrx_P0_value);
+Serial.print(" + ");
+Serial.print(MeetingPoint_TipPoint_Value);
+Serial.print(" * ");
+Serial.print(cos((360-vi_angleToolTip_value)*DEG_TO_RAD));
+Serial.print(" = ");
+Serial.println(Xz_newRightArm_Value);
+
+Yz_newRightArm_Value = Circle1_Middle_Y + vcy_SP1_value + vry_P0_value + MeetingPoint_TipPoint_Value * sin((360-vi_angleToolTip_value)*DEG_TO_RAD);
+Serial.print("RC: Yz_newRightArm_Value: ");
+Serial.print(Circle1_Middle_Y);
+Serial.print(" + ");
+Serial.print(vcy_SP1_value);
+Serial.print(" + ");
+Serial.print(vry_P0_value);
+Serial.print(" + ");
+Serial.print(MeetingPoint_TipPoint_Value);
+Serial.print(" * ");
+Serial.print(sin((360-vi_angleToolTip_value)*DEG_TO_RAD));
+Serial.print(" = ");
+Serial.println(Yz_newRightArm_Value);
+
+
+ }
 };
 
 #endif
