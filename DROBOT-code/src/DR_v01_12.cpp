@@ -83,7 +83,7 @@
 #define Coordinate_minY_Value 200 CoordResolution
 
 #define Coordinate_0X_Value 140 CoordResolution
-#define Coordinate_0Y_Value 252 CoordResolution
+#define Coordinate_0Y_Value 222 CoordResolution
 
 #define DC_MotorTime_Value 8000  //ms DC Motor Time
 
