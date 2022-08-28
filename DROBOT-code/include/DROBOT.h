@@ -607,9 +607,9 @@ private:
     unsigned long rK1_LowArm_Value = 0;  //length the Circle Radius 1
 
 
-  double MeetingPoint_TipPoint_Value = 0;  //length between tip of the tool and meeting point of arms
-  double MeetingPoint_TipPoint_AngleValue = 0;    //Angle of the line between Meetingpoint to tip of the tool
-  double vi_angleToolTip_value = 0;
+  double l_PAP0_Value = 0;  //length between tip of the tool and meeting point of arms
+  double vi0_PAP0_angle = 0;    //Angle of the line between PA to tip of the tool
+  double vi0_ToolTip_angle = 0;
   unsigned long DeltaX_LeftArm_Value = 0;         //Delta X from center to rotation point of the Left Arm
   unsigned long DeltaX_RightArm_Value = 0;        //Delta X from center to rotation point of the Right Arm
   double Transmission_LeftArm_Value = 0;
@@ -648,15 +648,16 @@ public:
     double TransLArm,
     double TransRArm) {
 
+      double MPTipP2=MPTipP*MPTipP;
+      double LLArm2 = LLArm*LLArm;
+
  TolOffSet_true = SetTool;
     Lenght_UpArm_Value = LUArm;   //length of the Left Upper Arm in mm
               
     if (TolOffSet_true){
-      rK1_LowArm_Value = sqrt(MPTipP*MPTipP*1.00+LLArm*LLArm*1.00-2.00*MPTipP*LLArm*cos(MPTipPAngle*DEG_TO_RAD));
+      rK1_LowArm_Value = sqrt(MPTipP2*1.00+LLArm2*1.00-2.00*MPTipP*LLArm*cos(MPTipPAngle*DEG_TO_RAD));
       //60^2+333^2-2*60*33*cos(100)=348.465
        }
-
-
 
    Serial.print("SD2D: MPTipP*MPTipP: ");
     Serial.print(MPTipP*MPTipP);
@@ -672,9 +673,9 @@ public:
 
 Lenght_LowArm_Value = LLArm;  //length of the Left Lower Arm in mm
 
-    MeetingPoint_TipPoint_Value = MPTipP;            //length between tip of the tool and meeting point of arms
+    l_PAP0_Value = MPTipP;            //length between tip of the tool and meeting point of arms
     
-    MeetingPoint_TipPoint_AngleValue = MPTipPAngle;  //Angle of the line between Meetingpoint to tip of the tool
+    vi0_PAP0_angle = MPTipPAngle;  //Angle of the line between PA to tip of the tool
 
     DeltaX_LeftArm_Value = DXLArm;                   //Delta X from center to rotation point of the Left Arm
     DeltaX_RightArm_Value = DXRArm;                  //Delta X from center to rotation point of the Right Arm
@@ -689,10 +690,10 @@ Lenght_LowArm_Value = LLArm;  //length of the Left Lower Arm in mm
     Serial.print("SD2D: L_UpArm_Value: ");
     Serial.println(Lenght_UpArm_Value);
 
-    Serial.print("SD2D: MeetingPoint_TipPoint_Value: ");
-    Serial.println(MeetingPoint_TipPoint_Value);
-    Serial.print("SD2D: MeetingPoint_TipPoint_AngleValue: ");
-    Serial.println(MeetingPoint_TipPoint_AngleValue);
+    Serial.print("SD2D: l_PAP0_Value: ");
+    Serial.println(l_PAP0_Value);
+    Serial.print("SD2D: vi0_PAP0_angle: ");
+    Serial.println(vi0_PAP0_angle);
 
     Serial.print("SD2D: DeltaX_LeftArm_Value: ");
     Serial.println(DeltaX_LeftArm_Value);
@@ -903,84 +904,131 @@ Lenght_LowArm_Value = LLArm;  //length of the Left Lower Arm in mm
   }
 
 void RecalcCoordinates(
-unsigned long X,
-unsigned long Y)
+unsigned long P0X,
+unsigned long P0Y)
  {
+
+double vi3_vr_angle; // angle vi3 of tool tip triangle and S1
+double vi4_toolTriangle_angle; //angle vi5 of inner tool tip triangle
+double vi5_toolTriangle_angle; //angle vi5 of inner tool tip triangle
+double evi_toolTriangle_angle;//angle epsilon vi of tool tip triangle from 0 to 180°
+double P0x_target_coord; //target coordinates x
+double P0y_target_coord; //target coordinates y
+double vr_length_value = 0; //length vector of tooltip to S1
+
+
 //Calculate Px/y_target_coord
-double Px_target_coord;
-double Py_target_coord;
-//lenght upperArm Value == c
-double rr_radiusR_value =0;
 
-double vR_MRightToTool_vector =0;
+P0x_target_coord =P0X*1.00;
+P0y_target_coord =P0Y*1.00;
 
-Px_target_coord =X;
-Py_target_coord =Y;
+//1. Calculate Vector vr = P0 - SR1
+double vrx_P0_value = P0x_target_coord - Intersection_I1_X;
+double vry_P0_value = P0y_target_coord - Intersection_I1_Y;
+Serial.print("RC: vrx_P0_value: ");
+Serial.print(P0x_target_coord);
+Serial.print(" - ");
+Serial.print(Intersection_I1_X);
+Serial.print(" = ");
+Serial.println(vrx_P0_value);
+
+Serial.print("RC: vry_P0_value: ");
+Serial.print(P0y_target_coord);
+Serial.print(" - ");
+Serial.print(Intersection_I1_Y);
+Serial.print(" = ");
+Serial.println(vry_P0_value);
+//1.1 calculate angle vi3 of vr 
+vi3_vr_angle = atan2(vry_P0_value,vrx_P0_value);
+
+Serial.print("RC: vi3_vr_angle: ");
+Serial.println(vi3_vr_angle);
+
+//2 calculate length of vr
+
+vr_length_value = sqrt(vrx_P0_value*vrx_P0_value+vry_P0_value*vry_P0_value);
+Serial.print("RC: vr_length_value: ");
+Serial.print(vr_length_value);
+Serial.print(" ?== ");
+Serial.println(rK1_LowArm_Value );
+
 
 double vcx_SP1_value = Intersection_I1_X-Circle1_Middle_X;
 double vcy_SP1_value = Intersection_I1_Y-Circle1_Middle_Y;
-double vrx_P0_value = Px_target_coord - Intersection_I1_X;
-double vry_P0_value = Py_target_coord - Intersection_I1_Y;
 double divisorCOS = 0;
-double MeetingPoint_TipPoint_Value2 = MeetingPoint_TipPoint_Value*MeetingPoint_TipPoint_Value;
+double PA_P0_Value2 = l_PAP0_Value*l_PAP0_Value;
 double rK1_LowArm_Value2 = rK1_LowArm_Value*rK1_LowArm_Value;
 double Lenght_LowArm_Value2 = Lenght_LowArm_Value*Lenght_LowArm_Value;
 
+
 //calculate  the angle vi of the circle 1 to ToolTip
 
-divisorCOS= (2.00*rK1_LowArm_Value*MeetingPoint_TipPoint_Value);
+divisorCOS= (2.00*rK1_LowArm_Value*l_PAP0_Value);
 Serial.print("RC: 2* rK1_LowArm_Value: ");
 Serial.print(rK1_LowArm_Value);
 Serial.print(" * ");
-Serial.print(MeetingPoint_TipPoint_Value);
+Serial.print(l_PAP0_Value);
 Serial.print(" = ");
 Serial.println(divisorCOS);
 
-MeetingPoint_TipPoint_Value2 = MeetingPoint_TipPoint_Value*MeetingPoint_TipPoint_Value;
 
-vi_angleToolTip_value = acos((MeetingPoint_TipPoint_Value2+rK1_LowArm_Value2-Lenght_LowArm_Value2)/divisorCOS);
+//3 calculate vi5 of tool Tip triangle
 
-Serial.print("RC: vi_angleToolTip_value: ");
-Serial.print(MeetingPoint_TipPoint_Value2);
 
+vi5_toolTriangle_angle = acos((PA_P0_Value2+rK1_LowArm_Value2-Lenght_LowArm_Value2)/divisorCOS)*RAD_TO_DEG;
+
+Serial.print("RC: vi5_toolTriangle_angle: ");
+Serial.print(PA_P0_Value2);
 Serial.print(" + ");
 Serial.print(rK1_LowArm_Value2);
-
 Serial.print(" - ");
 Serial.print(Lenght_LowArm_Value2);
-
 Serial.print(" / ");
 Serial.print(divisorCOS);
 Serial.print(" = ");
-Serial.println(vi_angleToolTip_value);
+Serial.println(vi5_toolTriangle_angle); //68°
 
-//Calculate v1
+//4 calculate vi4 of top Angle Tool tip
+vi4_toolTriangle_angle = 180-vi0_PAP0_angle-vi5_toolTriangle_angle;
 
-Xz_newRightArm_Value = Circle1_Middle_X + vcx_SP1_value + vrx_P0_value + MeetingPoint_TipPoint_Value * cos((360-vi_angleToolTip_value)*DEG_TO_RAD);
+Serial.print("RC: vi4_toolTriangle_angle:  180-");
+Serial.print(vi0_PAP0_angle);
+Serial.print(" - ");
+Serial.print(vi5_toolTriangle_angle);
+Serial.print(" = ");
+Serial.println(vi4_toolTriangle_angle);
+
+//5 calculate EpsilonVi of Tolltip Vector  
+
+evi_toolTriangle_angle = 180 - (vi4_toolTriangle_angle+vi3_vr_angle);
+Serial.print("RC: evi_toolTriangle_angle:  180-(");
+Serial.print(vi4_toolTriangle_angle);
+Serial.print(" + ");
+Serial.print(vi3_vr_angle);
+Serial.print(") = ");
+Serial.println(evi_toolTriangle_angle);
+
+
+//6 calculate vector w ->w = PA-P0
+
+Xz_newRightArm_Value = l_PAP0_Value * cos((evi_toolTriangle_angle)*DEG_TO_RAD)+P0x_target_coord;
+
 Serial.print("RC: Xz_newRightArm_Value: ");
-Serial.print(Circle1_Middle_X);
-Serial.print(" + ");
-Serial.print(vcx_SP1_value);
-Serial.print(" + ");
-Serial.print(vrx_P0_value);
-Serial.print(" + ");
-Serial.print(MeetingPoint_TipPoint_Value);
-Serial.print(" * ");
-Serial.print(cos((360-vi_angleToolTip_value)*DEG_TO_RAD));
+Serial.print(l_PAP0_Value);
+Serial.print(" * cos(");
+Serial.print((evi_toolTriangle_angle)*DEG_TO_RAD);
+Serial.print(") + ");
+Serial.print(P0x_target_coord);
 Serial.print(" = ");
 Serial.println(Xz_newRightArm_Value);
 
-Yz_newRightArm_Value = Circle1_Middle_Y + vcy_SP1_value + vry_P0_value + MeetingPoint_TipPoint_Value * sin((360-vi_angleToolTip_value)*DEG_TO_RAD);
+Yz_newRightArm_Value = l_PAP0_Value * sin((evi_toolTriangle_angle)*DEG_TO_RAD)+P0y_target_coord;
 Serial.print("RC: Yz_newRightArm_Value: ");
-Serial.print(Circle1_Middle_Y);
-Serial.print(" + ");
-Serial.print(vcy_SP1_value);
-Serial.print(" + ");
-Serial.print(vry_P0_value);
-Serial.print(" + ");
-Serial.print(MeetingPoint_TipPoint_Value);
-Serial.print(" * ");
-Serial.print(sin((360-vi_angleToolTip_value)*DEG_TO_RAD));
+Serial.print(l_PAP0_Value);
+Serial.print(" * sin(");
+Serial.print((evi_toolTriangle_angle)*DEG_TO_RAD);
+Serial.print(") + ");
+Serial.print(P0y_target_coord);
 Serial.print(" = ");
 Serial.println(Yz_newRightArm_Value);
 

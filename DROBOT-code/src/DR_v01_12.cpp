@@ -70,8 +70,8 @@
 #define Lenght_UpArm_Value 248 CoordResolution   //length of the  Upper Arm in mm
 #define Lenght_LowArm_Value 336 CoordResolution  //length of the  Lower Arm in mm
 
-#define MeetingPoint_TipPoint_Value 60 CoordResolution  //length between tip of the tool and meeting point of arms
-#define MeetingPoint_TipPoint_AngleValue 1000             //Angle of the line between Meetingpoint to tip of the tool
+#define MeetingPoint_TipPoint_Value 67 CoordResolution  //length between tip of the tool and meeting point of arms
+#define MeetingPoint_TipPoint_AngleValue 98             //Angle of the line between Meetingpoint to tip of the tool
 #define DeltaX_LeftArm_Value 254 CoordResolution        //Delta X from center to rotation point of the Left Arm
 #define DeltaX_RightArm_Value 404 CoordResolution       //Delta X from center to rotation point of the Right Arm
 #define Transmission_LeftArm_Value 2.5
@@ -82,8 +82,8 @@
 #define Coordinate_maxY_Value 550 CoordResolution
 #define Coordinate_minY_Value 200 CoordResolution
 
-#define Coordinate_0X_Value 150 CoordResolution
-#define Coordinate_0Y_Value 220 CoordResolution
+#define Coordinate_0X_Value 140 CoordResolution
+#define Coordinate_0Y_Value 252 CoordResolution
 
 #define DC_MotorTime_Value 8000  //ms DC Motor Time
 
@@ -666,7 +666,7 @@ if (Z==0){
   MM_Calc_Ins.Interpolate();
 
   //3.Step: Calculate new Angle to reach thos coordinates.
-  //Right arm first
+  //Right arm first //Calculation with Tool Offset
   determinant_RightArm_Value = D2D_RightArm_Kin.IntersectionOfTwoCircles(DeltaX_RightArm_Value, 0, MM_Calc_Ins.Xz_NextStep_Value, MM_Calc_Ins.Yz_NextStep_Value);
   if (determinant_RightArm_Value == 2) {
     D2D_RightArm_Kin.InverseKinematic(right_Arm);
