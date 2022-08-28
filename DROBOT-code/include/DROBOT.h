@@ -231,7 +231,7 @@ public:
       M5.lcd.print("setOldAngleValue r ");
       M5.lcd.println(Old_Angle_Value);*/
       return (1);
-    } else if ((Motor_Position_Value == 0) and (Angle >= 80) and (Angle <= 270))  //if motorposition is left / 90°=<x<=270°
+    } else if ((Motor_Position_Value == 0) and (Angle >= 75) and (Angle <= 270))  //if motorposition is left / 90°=<x<=270°
     {
       Old_Angle_Value = Angle;
       /*   Serial.print("setOldAngleValue l ");
@@ -262,7 +262,7 @@ public:
       Serial.println(New_Angle_Value);
 
       return (1);
-    } else if (!Motor_Position_Value and (Angle >= 80) and (Angle <= 270))  //if motorposition is left / 90°=<x<=270°
+    } else if (!Motor_Position_Value and (Angle >= 75) and (Angle <= 270))  //if motorposition is left / 75°=<x<=270°
     {
       New_Angle_Value = Angle;  //
       Serial.print(" sNA: setNewAngleValue° L: ");
