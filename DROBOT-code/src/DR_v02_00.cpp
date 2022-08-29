@@ -83,7 +83,7 @@
 #define Coordinate_minY_Value 200 CoordResolution
 
 #define Coordinate_0X_Value 140 CoordResolution
-#define Coordinate_0Y_Value 208 CoordResolution//-22mm offset 
+#define Coordinate_0Y_Value 242 CoordResolution//-22mm offset 
 
 #define DC_MotorTime_Value 8000  //ms DC Motor Time
 
@@ -315,7 +315,6 @@ bool controllZAxis(bool dir_DCMotor_val, unsigned long RunTime) {
 
   if (dir_DCMotor_val and GPIO_Ports_Instanz.digitalRead(Limit_Switch_Pin))  //hoch
   {
-
   Serial.println("ZAX: UP: ");
   Serial.print("ZAX: Button: ");  
    Serial.println(GPIO_Ports_Instanz.digitalRead(Limit_Switch_Pin));
@@ -343,7 +342,7 @@ bool controllZAxis(bool dir_DCMotor_val, unsigned long RunTime) {
 
     do {
     } while ((millis() - startTime < RunTime));
-    GPIO_Ports_Instanz.digitalWrite(Mvertical_ON_Pin, LOW);  //Motor Ein
+    GPIO_Ports_Instanz.digitalWrite(Mvertical_ON_Pin, LOW);  //Motor Aus
   } else {
     return (1);
   };
@@ -594,47 +593,73 @@ unsigned int Draw() {  //State 3
     M5.Lcd.setCursor(10,40);
 
    getLocalTime(&timeinfo);
-    Serial.print(&timeinfo);
       M5.lcd.print(&timeinfo);
+
+        M5.Lcd.fillRect(10,60,280,20,NAVY);
+  M5.Lcd.setCursor(10, 60);
+  M5.Lcd.setTextColor(GREENYELLOW);
+    M5.lcd.print("o>X "); 
+    M5.Lcd.setTextColor(YELLOW);
+    M5.Lcd.drawFloat(MM_Calc_Ins.X1_Origin_Value, 0, 50, 60);
+     // M5.lcd.print(MM_Calc_Ins.Xz_NextStep_Value);
+       M5.Lcd.setCursor(150, 60);
+      M5.Lcd.setTextColor(GREENYELLOW);
+        M5.lcd.print("o>TY ");
+        M5.Lcd.setTextColor(YELLOW);
+        M5.Lcd.drawFloat(MM_Calc_Ins.Y1_Origin_Value, 0, 200,60);
+        //  M5.lcd.println(MM_Calc_Ins.Yz_NextStep_Value);
   
   M5.Lcd.fillRect(10,80,280,20,NAVY);
   M5.Lcd.setCursor(10, 80);
-
   M5.Lcd.setTextColor(GREENYELLOW);
-    M5.lcd.print("X: "); 
+    M5.lcd.print("o X "); 
     M5.Lcd.setTextColor(YELLOW);
     M5.Lcd.drawFloat(MM_Calc_Ins.Xz_NextStep_Value, 0, 50,80);
      // M5.lcd.print(MM_Calc_Ins.Xz_NextStep_Value);
        M5.Lcd.setCursor(150, 80);
       M5.Lcd.setTextColor(GREENYELLOW);
-        M5.lcd.print("Y: ");
+        M5.lcd.print("o Y ");
         M5.Lcd.setTextColor(YELLOW);
         M5.Lcd.drawFloat(MM_Calc_Ins.Yz_NextStep_Value, 0, 200,80);
         //  M5.lcd.println(MM_Calc_Ins.Yz_NextStep_Value);
-  M5.Lcd.fillRect(10,100,240,20,NAVY);
+
+  M5.Lcd.fillRect(10,100,280,20,NAVY);
   M5.Lcd.setCursor(10, 100);
- 
+  M5.Lcd.setTextColor(GREENYELLOW);
+    M5.lcd.print(">oX "); 
+    M5.Lcd.setTextColor(YELLOW);
+    M5.Lcd.drawFloat(MM_Calc_Ins.X2_Target_Value, 0, 50, 100);
+     // M5.lcd.print(MM_Calc_Ins.Xz_NextStep_Value);
+       M5.Lcd.setCursor(150, 100);
+      M5.Lcd.setTextColor(GREENYELLOW);
+        M5.lcd.print(">oTY ");
+        M5.Lcd.setTextColor(YELLOW);
+        M5.Lcd.drawFloat(MM_Calc_Ins.Y2_Target_Value, 0, 200,100);
+        //  M5.lcd.println(MM_Calc_Ins.Yz_NextStep_Value);
+    
+    M5.Lcd.fillRect(10,120,240,20,NAVY);
+   M5.Lcd.setCursor(10, 120);
   M5.Lcd.setTextColor(GREENYELLOW);
     M5.lcd.print("alphaL: "); 
     M5.Lcd.setTextColor(YELLOW);
-       M5.Lcd.drawFloat(Motor_Left_Ins.getNewAngelValue(), 2, 100,100);
+       M5.Lcd.drawFloat(Motor_Left_Ins.getNewAngelValue(), 2, 100,120);
      // M5.lcd.println(Motor_Left_Ins.getNewAngelValue());
      
-    M5.Lcd.fillRect(10,120,240,20,NAVY);
-     M5.Lcd.setCursor(10, 120);
+    M5.Lcd.fillRect(10,140,240,20,NAVY);
+     M5.Lcd.setCursor(10, 140);
           M5.Lcd.setTextColor(GREENYELLOW);
         M5.lcd.print("alphaR: ");
         M5.Lcd.setTextColor(YELLOW);
-          M5.Lcd.drawFloat(Motor_Right_Ins.getNewAngelValue(), 2, 100,120);
+          M5.Lcd.drawFloat(Motor_Right_Ins.getNewAngelValue(), 2, 100,140);
         //  M5.lcd.println(Motor_Right_Ins.getNewAngelValue());
-    M5.Lcd.fillRect(10,150,240,20,NAVY);
-     M5.Lcd.setCursor(10,150);
+    M5.Lcd.fillRect(10,160,240,20,NAVY);
+     M5.Lcd.setCursor(10,160);
   M5.Lcd.setTextColor(GREENYELLOW);
     M5.lcd.print("Progress: "); M5.Lcd.setTextColor(YELLOW);
-  M5.Lcd.drawFloat((MM_Calc_Ins.Done_Steps_Value*1.00/(MM_Calc_Ins.TotalNof_Steps_Value*1.00+1.00))*100.00, 2, 120,150);
+  M5.Lcd.drawFloat((MM_Calc_Ins.Done_Steps_Value*1.00/(MM_Calc_Ins.TotalNof_Steps_Value*1.00+1.00))*100.00, 2, 120,160);
      // M5.lcd.print((MM_Calc_Ins.Done_Steps_Value*1.00/(MM_Calc_Ins.TotalNof_Steps_Value*1.00+1.00))*100.00 );
       M5.Lcd.setTextColor(GREENYELLOW);
-       M5.Lcd.setCursor(200, 150);
+       M5.Lcd.setCursor(200, 160);
         M5.lcd.println("% ");M5.Lcd.setTextColor(YELLOW);
 
   double old_Angle_value = 0;
@@ -647,13 +672,11 @@ if (Z>0){
   Serial.print(" S3: DC Motor Up: ");
 
   do { } while (!controllZAxis(UP, DC_MotorTime_Value));
-  Serial.println("^");
 }
 if (Z==0){
   Serial.print(" S3: DC Motor Down: ");
 
   do { } while (!controllZAxis(DOWN, DC_MotorTime_Value));
-  Serial.println("v");
 }
 
 
@@ -1177,8 +1200,7 @@ M5.lcd.println("CAL: Motor Left at 90°");
   }
 
   //3. move Motor left to position 180°
-   
-   
+      
   if (Motor_Left_Ins.setNewAngelValue(180)) Serial.println("Motor Left Set Angle: Succeed");
   else {
     Serial.println("Motor Left Set Angle: Failed");

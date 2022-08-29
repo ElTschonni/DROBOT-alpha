@@ -500,14 +500,13 @@ public:
   }
 
   void Interpolate() {
-    double LoW_Value = 0;
+    double LoW_Value = 0; //Length_ofWay_Value
     double Q_Value = 0;
 
     if (Done_Steps_Value == 0) {  // Calculations once per Interpolate session
-      LoW_Value = (Y2_Target_Value - Y1_Origin_Value) * (Y2_Target_Value - Y1_Origin_Value);
-      if (LoW_Value <= 0) LoW_Value *(-1);                    //Make sure value is not <0
-      Length_ofWay_Value = sqrt(LoW_Value);                   //if it is 0 then there is nothing to do
-      if (Length_ofWay_Value == 0) TotalNof_Steps_Value = 0;  //Number of Steps is also gona be 0
+      LoW_Value = (Y2_Target_Value - Y1_Origin_Value) * (Y2_Target_Value - Y1_Origin_Value)+ (X2_Target_Value - X1_Origin_Value)*(X2_Target_Value-X1_Origin_Value);
+      Length_ofWay_Value = sqrt(abs(LoW_Value));                   //if it is 0 then there is nothing to do
+      if (Length_ofWay_Value < 0.01) TotalNof_Steps_Value = 0;  //Number of Steps is also gona be 0
       else {
         TotalNof_Steps_Value = Length_ofWay_Value / Min_Resolution_Value;
         /*
@@ -737,8 +736,16 @@ Lenght_LowArm_Value = LLArm;  //length of the Left Lower Arm in mm
 
     UpArm2 = Lenght_UpArm_Value * Lenght_UpArm_Value * 1.00;
     
-    if(TolOffSet_true) LowArm2 = rK1_LowArm_Value * rK1_LowArm_Value;
-    else{ LowArm2 = Lenght_LowArm_Value * Lenght_LowArm_Value;    }
+    if(TolOffSet_true) 
+    {LowArm2 = rK1_LowArm_Value * rK1_LowArm_Value; 
+    Serial.print("Io2C: ToolTip Offset rK1_LowArm_Value: ");
+    Serial.println(rK1_LowArm_Value);
+
+    }
+    
+    else{ LowArm2 = Lenght_LowArm_Value * Lenght_LowArm_Value;    
+      Serial.print("Io2C: ToolTip Offset Lenght_LowArm_Value ");
+    Serial.println(Lenght_LowArm_Value);}
     
     Y2 = Circle2_Middle_Y * Circle2_Middle_Y;
     Y1 = Circle1_Middle_Y * Circle1_Middle_Y;
@@ -939,7 +946,7 @@ Serial.print(Intersection_I1_Y);
 Serial.print(" = ");
 Serial.println(vry_P0_value);
 //1.1 calculate angle vi3 of vr 
-vi3_vr_angle = atan2(vry_P0_value,vrx_P0_value);
+vi3_vr_angle = asin(vry_P0_value/rK1_LowArm_Value)*RAD_TO_DEG;
 
 Serial.print("RC: vi3_vr_angle: ");
 Serial.println(vi3_vr_angle);
@@ -975,9 +982,9 @@ Serial.println(divisorCOS);
 //3 calculate vi5 of tool Tip triangle
 
 
-vi5_toolTriangle_angle = acos((PA_P0_Value2+rK1_LowArm_Value2-Lenght_LowArm_Value2)/divisorCOS)*RAD_TO_DEG;
+vi4_toolTriangle_angle = acos((PA_P0_Value2+rK1_LowArm_Value2-Lenght_LowArm_Value2)/divisorCOS)*RAD_TO_DEG;
 
-Serial.print("RC: vi5_toolTriangle_angle: ");
+Serial.print("RC: vi4_toolTriangle_angle: ");
 Serial.print(PA_P0_Value2);
 Serial.print(" + ");
 Serial.print(rK1_LowArm_Value2);
@@ -986,26 +993,26 @@ Serial.print(Lenght_LowArm_Value2);
 Serial.print(" / ");
 Serial.print(divisorCOS);
 Serial.print(" = ");
-Serial.println(vi5_toolTriangle_angle); //68°
+Serial.println(vi4_toolTriangle_angle); //68°
 
 //4 calculate vi4 of top Angle Tool tip
-vi4_toolTriangle_angle = 180-vi0_PAP0_angle-vi5_toolTriangle_angle;
+vi5_toolTriangle_angle = 180-vi0_PAP0_angle-vi4_toolTriangle_angle;
 
 Serial.print("RC: vi4_toolTriangle_angle:  180-");
 Serial.print(vi0_PAP0_angle);
 Serial.print(" - ");
-Serial.print(vi5_toolTriangle_angle);
+Serial.print(vi4_toolTriangle_angle);
 Serial.print(" = ");
-Serial.println(vi4_toolTriangle_angle);
+Serial.println(vi5_toolTriangle_angle);
 
 //5 calculate EpsilonVi of Tolltip Vector  
 
-evi_toolTriangle_angle = 180 - (vi4_toolTriangle_angle+vi3_vr_angle);
-Serial.print("RC: evi_toolTriangle_angle:  180-(");
-Serial.print(vi4_toolTriangle_angle);
-Serial.print(" + ");
+evi_toolTriangle_angle = 360 - vi3_vr_angle-vi4_toolTriangle_angle;
+Serial.print("RC: evi_toolTriangle_angle:  360 - ");
 Serial.print(vi3_vr_angle);
-Serial.print(") = ");
+Serial.print(" - ");
+Serial.print(vi4_toolTriangle_angle);
+Serial.print(" = ");
 Serial.println(evi_toolTriangle_angle);
 
 
