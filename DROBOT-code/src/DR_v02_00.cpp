@@ -32,7 +32,6 @@
 #include "time.h"
 
 
-
 //=========| definiere Werte |==================================================*/
 #define ON HIGH
 #define OFF LOW
@@ -135,6 +134,8 @@ Motor_Movement_Calc MM_Calc_Ins;                              //create the motor
 Delta2D_Kinematic D2D_RightArm_Kin;                           //create the Kinematic Calculation instance
 Delta2D_Kinematic D2D_LeftArm_Kin;                            //create the Kinematic Calculation instance
 Adafruit_PWMServoDriver pwm_Ports_Instanz = Adafruit_PWMServoDriver(); // called this way, it uses the default address 0x40
+
+
 //==============================================================================*/
 //=========| deklaration von Variabeln |========================================*/
 unsigned int programSelector = 6;  //Program selection variable
@@ -393,7 +394,6 @@ void checkWiFiConnection() {
   long sum = 0;
 
   while (wiFiMulti.run() != WL_CONNECTED) {
-    delay(500);
     Serial.print(".");
     M5.lcd.print(".");
     sum += 1;
