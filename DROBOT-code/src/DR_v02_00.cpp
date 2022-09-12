@@ -32,6 +32,7 @@
 #include "time.h"
 
 
+
 //=========| definiere Werte |==================================================*/
 #define ON HIGH
 #define OFF LOW
@@ -49,7 +50,7 @@
 #define WLAN_PASSWD "Milkyway29!"     //"teko2016"
 #define MCP23017_ADDR 0x20            //I2C Addrese
 #define I2C_Clock_Speed 1700000       // 1.7 MHz
-
+IPAddress ClientIP(192, 168, 0, 71); 
 #define Mright 1
 #define Mleft 0
 
@@ -415,11 +416,9 @@ void checkWiFiConnection() {
 
 unsigned int Standby()  //State 1
 {
-
-  Start_StateMachine = false;
-  mb.task();
        
-  mb.Hreg(STATUS_HREG, Status);
+  //mb.Hreg(STATUS_HREG, Status);
+  //  mb.Hreg(STATUS_HREG, 4);
 
  delay(1000);
   M5.Lcd.fillRect(10,40,240,20,GREEN);
@@ -432,7 +431,11 @@ unsigned int Standby()  //State 1
    getLocalTime(&timeinfo);
     M5.lcd.print(&timeinfo);
 
-  if (LastState != 1) {
+  if (LastState != 1) {//set Robot Status to 1 and send this info to client
+    Status = 1;
+    mb.Hreg(STATUS_HREG, Status);
+
+    Start_StateMachine = false;
     M5.Lcd.fillScreen(GREEN);
   M5.Lcd.setTextSize(3);
   M5.Lcd.setCursor(10, 10);
@@ -507,7 +510,6 @@ M5.Lcd.fillRect(212,210,100,30,DARKGREEN);
 
 unsigned int Receive()  //State 2 Verarbeitung
 {M5.Lcd.fillScreen(GREENYELLOW);
-  mb.task();
   Serial.println("------ State Receive------");
   Serial.print("- Roboter_State: ");
   Serial.println(Status);
@@ -538,6 +540,7 @@ unsigned int Receive()  //State 2 Verarbeitung
       MM_Calc_Ins.Done_Steps_Value = 0;
  LastState = 2;
       Status = 2;  // gehe zu draw
+
         M5.Lcd.fillScreen(NAVY);
       return (3);
 
@@ -582,7 +585,14 @@ unsigned int Receive()  //State 2 Verarbeitung
 }
 
 unsigned int Draw() {  //State 3
-  Serial.print("S3: Draw");
+Status = 2;
+  mb.Hreg(STATUS_HREG, Status);
+   mb.Hreg(STATUS_HREG, Status);
+
+
+    Serial.println("S3: Draw");
+     Serial.print("S3: Roboter Status: ");
+      Serial.print(Status);
 
     M5.Lcd.setTextSize(3);
   M5.Lcd.setCursor(10, 10);
@@ -746,8 +756,7 @@ moveToNewPositionRight();
   //delay(3000);
   //7.Step: if there was an error, go to State 3 Error
   if (Motor_Left_Ins.errorcode > 0) {
-
-    Status = 3;
+    //Status = 3;
     return (5);
   }
   //8.Step: if the current coordinates are not equal to the target coordinates do the loop again
@@ -755,11 +764,11 @@ moveToNewPositionRight();
 
 
     if ((MM_Calc_Ins.Xz_NextStep_Value == 0) or (MM_Calc_Ins.Yz_NextStep_Value == 0)) {
-      Status = 3;
+     // Status = 3;
       LastState = 3;
       return (5);
     } else {
-      Status = 2;
+      //Status = 2;
       LastState = 3;
       return (3);
     }
@@ -778,7 +787,7 @@ moveToNewPositionRight();
 
     MM_Calc_Ins.setOriginCoordinates(MM_Calc_Ins.X2_Target_Value, MM_Calc_Ins.Y2_Target_Value);
 
-    Status = 1;
+  
     LastState = 3;
     return (1);
   } else {
@@ -787,10 +796,10 @@ moveToNewPositionRight();
 
       Serial.print("S3: Coordinates and Angle Match -> go to next Interpolate Step. ");
 
-      Status = 2;
+
       LastState = 3;
       return (3);
-    } else if (MM_Calc_Ins.Done_Steps_Value == MM_Calc_Ins.TotalNof_Steps_Value) {
+    } else if (MM_Calc_Ins.Done_Steps_Value == MM_Calc_Ins.TotalNof_Steps_Value) { //Ziel Koordinaten wurden erreicht
 
       Serial.print("S3: Interpolate Steps Finished: Xz ");
       Serial.print(MM_Calc_Ins.Xz_NextStep_Value);
@@ -804,7 +813,7 @@ moveToNewPositionRight();
 
       MM_Calc_Ins.setOriginCoordinates(MM_Calc_Ins.X2_Target_Value, MM_Calc_Ins.Y2_Target_Value);
 
-      Status = 1;
+
       LastState = 3;
       return (1);
     } else {
@@ -855,7 +864,7 @@ moveToNewPositionRight();
       Serial.println(Motor_Right_Ins.getNewAngelValue());
 
       LastState = 3;
-      Status = 3;
+
       return (5);
     }
   }
@@ -864,7 +873,9 @@ moveToNewPositionRight();
 unsigned int WrongCommand()  //State 4, steuert die Motoren
 {M5.Lcd.fillScreen(REPEAT_DELAY);
   Serial.println("------ Wrong Command -------");
-  Status = 1;
+    Status = 3;
+   mb.Hreg(STATUS_HREG, Status);
+
   return (1);
   LastState = 4;
 }
@@ -876,11 +887,12 @@ M5.Lcd.fillScreen(RED);
   Serial.println(Motor_Left_Ins.errorcode);
   Serial.print(" Error Code Motor Right: ");
   Serial.println(Motor_Right_Ins.errorcode);
-
+    Status = 3;
+   mb.Hreg(STATUS_HREG, Status);
 
   Motor_Left_Ins.errorcode = 0;
   Motor_Right_Ins.errorcode = 0;
-  Status = 1;
+
 
   return (1);
   LastState = 5;
@@ -1461,10 +1473,10 @@ void loop() {
       cycleCounter = 0;
 
 checkWiFiConnection();
-
-     
+    
     }
     cycleCounter++;
+     mb.task();
 
     switch (state) {
       case 1: state = Standby(); break;  //Standby
