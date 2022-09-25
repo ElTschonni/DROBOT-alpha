@@ -46,6 +46,7 @@
 //=========| Classes |==================================================
 //1: CLSM Class: Closed_Loop_Step_Motor
 //2: MMC: Motor_Movement_Calc
+//3: D2D: Delta2D_Kinematic 
 
 //Constructor:
 
@@ -411,7 +412,7 @@ Serial.println("");
 
   }
 };
-
+//=========| 2: MMC Class: Motor_Movement_Calc  |=============
 class Motor_Movement_Calc {
 private:
   double Steps_Per_Rev = 0;
@@ -589,6 +590,7 @@ public:
   }
 };
 
+//=========| 3: D2D Class: Delta2D_Kinematic   |=============
 class Delta2D_Kinematic {
 private:
   //the linear slope between the intersection of the two circles
@@ -995,7 +997,7 @@ Serial.print(divisorCOS);
 Serial.print(" = ");
 Serial.println(vi4_toolTriangle_angle); //68°*/
 
-//4 calculate vi4 of top Angle Tool tip
+//4 calculate vi5 of top Angle Tool tip
 vi5_toolTriangle_angle = 180-vi0_PAP0_angle-vi4_toolTriangle_angle;
 /*
 Serial.print("RC: vi4_toolTriangle_angle:  180-");
