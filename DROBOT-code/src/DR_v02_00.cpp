@@ -3,13 +3,13 @@
   -`^'-      o  <_*_>        '\\-//`       '\\-//`        ,-_-|
   (o o)      o  (o o)         (o o)         (o o)        ([o o])
   |--ooO--(_)--Ooo--8---(_)--Ooo-ooO--(_)--Ooo-ooO--(_)--Ooo-ooO--(_)--Ooo- --------|
-  |Titel:         Delta Robot Project Teko 2022                                                     |
-  |File name:     2022-06-19_DROBOT_v00.002.ino                                            |
+  |Titel:         Delta Robot Project Teko 2022                                                     
+  |File name:     DR_v02_00.cpp                                           
   |Autor Name:    Jonathan Ernst & Reto Bissig  
   |MechanicalTeam: Lorenz, Alain, 
-  |Datum:         29.06.2022                                                        |
-  |Hardware:      M5Stack Core2 (Mikrocontroller: ESP32)                         |
-  |Software:      Arduino IDE 1.8.19 (www.arduino.cc)                               |
+  |Datum:         29.06.2022                                                        
+  |Hardware:      M5Stack Core2 (Mikrocontroller: ESP32)                         
+  |Software:      Platformio, VS Code                               
   |Beschreibung:  Delta Zeichnungsroboter 
 
   //Change Log 
@@ -17,11 +17,11 @@
 2022-07-08_DROBOT_v00.007.ino  - I2C Library
 2022-07-10_DROBOT_v00.010.cpp -- portation to platformio. - small changes to test I2C library, so far LED on.
 2022-07-30_DROBOT_v01.000.cpp -- Setup drawing Random Lines
+DR_v02_00.cpp -- Robot can receive new coordinates and draw percize lines
 
   |---------------------------------------------------------------------------------|
   //=========| include librarys |==================================================*/
 #include "DROBOT.h"  // Robot controll
-#include "M5S_PrintLog.h" // Printing Information on LCD and Serial Port.
 #include "Wire.h"    // I2C
 #include "M5Core2.h"
 #include "WiFi.h"
@@ -30,7 +30,6 @@
 #include <Adafruit_MCP23X17.h>
 #include <Adafruit_PWMServoDriver.h> //
 #include "time.h"
-
 
 
 //=========| definiere Werte |==================================================*/
@@ -726,8 +725,6 @@ D2D_RightArm_Kin.RecalcCoordinates(MM_Calc_Ins.Xz_NextStep_Value,MM_Calc_Ins.Yz_
   }
 
 //Step 3.1 Calculate other coordinates
-
-
 
   //4.Step:  set new angle
 
