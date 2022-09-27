@@ -45,11 +45,11 @@ DR_v02_00.cpp -- Robot can receive new coordinates and draw percize lines
 
 #define baudRate 2000000  //set baud rate for serial communiction
 
-#define WLAN_SSID "Wildbachhuis 2.4"  // define: suchen und ersetzen im Code "L-TEKO"
-#define WLAN_PASSWD "Milkyway29!"     //"teko2016"
+#define WLAN_SSID "L-TEKO"  // define: suchen und ersetzen im Code "L-TEKO", Wildbachhuis 2.4
+#define WLAN_PASSWD "teko2016"     //"teko2016", Milkyway29!
 #define MCP23017_ADDR 0x20            //I2C Addrese
 #define I2C_Clock_Speed 1700000       // 1.7 MHz
-IPAddress ClientIP(192, 168, 0, 71); 
+IPAddress ClientIP(192, 168, 40, 68); 
 #define Mright 1
 #define Mleft 0
 
