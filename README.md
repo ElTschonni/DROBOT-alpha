@@ -1,3 +1,5 @@
+![Aspose Words 70a3802e-d390-4a62-9d0c-541cbcb047f0 002](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/f9cf9ed7-ceb4-4644-b54e-54e5f899aed9)
+
 # **<a name="_toc115030257"></a>DROBOT-alpha**
 
 |<p></p><p></p><p>**RR Deltaroboter**</p>||
@@ -8,33 +10,6 @@
 
 
 © Jonathan Ernst, Reto Bissig, Alain Michel, Marcel Bernet, Lorenz Pfyl:	September 2022	II
-
-
-# **<a name="_toc115030257"></a>Anforderungsliste**
-
-|Revision|Anforderung|F|M|W|Verantwortlich|
-| :- | :- | :- | :- | :- | :- |
-||Geometrie|||||
-||Anhand einer CAD-Simulation das A3-Blatt abdecken|X|||Maschinenbau|
-||2-Achsen Positionierung|X|||Maschinenbau|
-||Z-Achse mit einem Halter für einen Stift |X|||Maschinenbau|
-||Sollte auf einem Teko-Schreibtisch Platz haben||X||Maschinenbau|
-||Der Stift sollte wechselbar sein|||X|Maschinenbau/ Elektrotechnik|
-||Kräfte|||||
-||Das Drehmoment der Motoren aushalten||X||Maschinenbau|
-||Energie|||||
-||Elektrische Versorgung|X|||Elektrotechnik|
-||Material|||||
-||Stabilität muss gewährleistet sein||X||Maschinenbau|
-||Rostfreie Konstruktion||X||Maschinenbau|
-||Die Arme sollten leicht sein||X||Maschinenbau|
-||Sicherheit|||||
-||Der Roboter darf sich nicht selbst zerstören|X|||Maschinenbau/ Elektrotechnik|
-||Quetschgefahr vermeiden||X||Maschinenbau/ Elektrotechnik|
-||Genauigkeit|||||
-||Linearität:  je linearer, desto besser|||X|Elektrotechnik|
-||Wiederholgenauigkeit: je genauer, desto besser|||X|Elektrotechnik|
-
 
 # <a name="_toc115030280"></a>**Hardware**
 Die Hauptbestandteile der Hardware können in drei Gruppen aufgeteilt werden. 
@@ -78,20 +53,23 @@ Folgende Tabelle zeigt eine Auflistung der Verwendeten Komponenten und ihr Einka
 
 ### <a name="_toc115030282"></a>**Elektrokomponenten Antrieb**
 ##### **JMC Closed Loop Schrittmotor mit integrierter Endstufe** 
+
+![dRobot-alphapic (28)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/94fd3338-429c-47b5-afa0-30c45ef82b12)
 <a name="_toc115029002"></a>Abbildung 4: DC-Schrittmotoren
-![P1681#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.080.png)
 
 Als Antrieb für die Delta-Arme haben wir uns für einen Schrittmotor mit einem integrierten Treiber sowie einem geschlossenen Regelkreis entschieden. Der Motor korrigiert automatisch, wenn die gesetzte Schrittposition nicht stimmt. Mit bis zu 50'000 Schritten pro Umdrehung kann eine hohe Winkelgenauigkeit erreicht werden. 
 Mit einem «Direction-Bit» kann die Drehrichtung bestimmt werden. Mit jeder Taktflanke am Puls Eingang bewegt sich der Motor um einen Schritt. 
 
 <a name="_toc115095542"></a>Tabelle 11: Winkelgenauigkeit
-
 |**StepsPerRotation:**|**Gear**|**Angle Per Step**|
 | :- | :- | :- |
 |51200|2\.5|0\.003 °|
 
 ### <a name="_toc115030283"></a>**Elektrokomponenten Steuerung**
-### **M5Stack Development Kit![P1694#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.081.jpeg)**
+### **M5Stack Development Kit**
+
+![dRobot-alphapic (7)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/1441f399-e499-4fa2-acab-b0482a0bc448)
+
 <a name="_toc115029003"></a>Abbildung 5: M5Stack Core 2
 
 Als Controller für die Robotersteuerung wurde ein M5Stack Core 2 Mikrocontroller verwendet. Der RISC-5 Controller unterstützt mit Wifi und I2C wichtige Schnittstellen für die Kommunikation zwischen Client und Roboter bzw. MCP23017. Der M5Stack Core verfügt mit einem 320x220 pixel LCD-Touchscreen über die nötigen Bedienungs- und Anzeigemöglichkeiten. Da der M5Stack nicht über einfach zugängliche GPIO-Ports verfügt wurde mit der I2C Schnittstelle ein GPIO und ein PWM Port Expander verwendet. 
@@ -102,13 +80,15 @@ Zur GPIO Port Erweiterung wurde mit einem MCP23017 gearbeitet. Dieser Chip stell
 ### **PWM Expansionboard**
 Um dennoch einen Servomotor anschliessen zu können, wurde eine PWM-Erweiterungsplatine mit einem PCA9685 16 Kanal 12-Bit Controller verwendet.
 
+![dRobot-alphapic (78)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/fbfe89bd-a4cd-48ec-94ff-2e44afa590ec)
+
 <a name="_toc115029004"></a>Abbildung 6: PCA9685 PWM Module
 
 <a name="_toc115029005"></a>Abbildung 7: MCP23017
 
-![P1702TB67#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.082.png)![P1702TB66#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.083.png)![P1702#y2](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.084.png)![P1702#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.085.png) 
 ## <a name="_toc115030284"></a>**Verkabelung**
 Für die Verkabelung des Roboters wurde kein Schema erstellt. Mit einer Definition der Ein- und Ausgänge sowie der Bestimmung der Betriebsspannung von 36VDC, konnte die Steuerung, der Motor und die Stromversorgung miteinander verbunden werden. 
+
 
 <a name="_toc115095543"></a>Tabelle 12: GPIO Port Zuweisung
 
@@ -133,7 +113,7 @@ Für die Verkabelung des Roboters wurde kein Schema erstellt. Mit einer Definiti
 
 Die restliche Verkabelungsarbeit beinhaltet lediglich die Verbindung dieser Komponenten gemäss obenstehender Tabelle sowie die Versorgung dieser Komponenten mit der richtigen Spannung. Gelegentlich musste noch ein Widerstand als Pull-Up oder zur Strombegrenzung eingebaut werden. 
 
-![P1809#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.086.png)
+![dRobot-alphapic (73)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/be53d435-94ad-42b9-b441-0f532c16899b)
 
 <a name="_toc115029006"></a>Abbildung 8: Verkabelung
 # <a name="_toc115030285"></a>**Software**
@@ -141,7 +121,7 @@ Als wichtiger Teil dieses Projektes bestimmt die Software die Funktionsweise des
 ## <a name="_toc115030286"></a>**Entwicklungsumgebung**
 Die Mikrocontroller (M5Stack Core2 und M5Stack) können mit der Entwicklungsumgebung von Arduino programmiert werden. 
 
-![P1815#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.087.png)
+![dRobot-alphapic (81)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/a2acb537-d9e2-49ee-9f40-65d544e99017)
 
 <a name="_toc115029007"></a>Abbildung 9: VS Code mit der Platformio Erweiterung
 
@@ -163,29 +143,35 @@ Bei der Suche nach einer alternative, bietet die Entwicklungsumgebung VS-Code mi
 ### <a name="_toc115030287"></a>**GitHub**
 Der Programcode ist online auf GitHub unter folgendem Link einsehbar. 
 
-<table><tr><th colspan="1" rowspan="2" valign="top"><p>
-<a name="_toc115029008"></a>Abbildung 10: GitHub Profil</p><p>![P1881C1T21#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.088.png)</p></th><th colspan="1" valign="top"><https://github.com/ElTschonni/DROBOT-alpha></th></tr>
-<tr><td colspan="1" valign="top">[Source Code](https://github.com/ElTschonni/DROBOT-alpha/blob/main/DROBOT-code/src/DR_v02_00.cpp)   -> [DROBOT-Library](https://github.com/ElTschonni/DROBOT-alpha/blob/main/DROBOT-code/include/DROBOT.h)</td></tr>
-</table>
+![dRobot-alphapic (82)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/4e4299f9-48a9-4553-a8ad-65359b56481d)
+
+Source Code
+https://github.com/ElTschonni/DROBOT-alpha/blob/main/DROBOT-code/src/DR_v02_00.cpp
+
+DROBOT-Library
+https://github.com/ElTschonni/DROBOT-alpha/blob/main/DROBOT-code/include/DROBOT.h
+
 
 ## <a name="_toc115030288"></a>**Struktur**
 Die Programmstruktur wird aufgeteilt in zwei grobe Strukturformen. 
-
 In der Hauprogrammdatei wird der Ablauf geregelt. Mit verschiedenen Klassen, welche sich in einer Bibliothek befinden werden die Probleme gelöst.
-
 Der Ablauf des Hauptprogrammes orientiert sich an dem im Kapitel 8.2.1 definierten State Diagramm.
+Es gibt insgesamt 3 Klassen, welche für die Steuerung des Roboters und die Berechnung der Bewegungen erstellt wurden.
 
-Es gibt insgesamt 3 Klassen, welche für die Steuerung des Roboters und die Berechnung der Bewegungen erstellt wurden. Diese werden im Kapitel  0 
 ### **State 3 Draw**
 Beschreibung des States 3 Draw anhand verschiedener Diagramme:
-### ![P1906#yIS1]
+![dRobot-alphapic (8)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/ecf923a0-b268-44e6-b4c6-6caaad17f9be)
+
 Abbildung 12: State 3 Draw Flowchart
-### ![P1908#yIS1]
+
+![dRobot-alphapic (9)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/4c30a44e-0178-4287-baf7-8ebba2a0cbbe)
+
 Abbildung 13: State 3 Draw UML
-### **
-Klassen beschrieben.
+
+
 ### <a name="_ref115004502"></a><a name="_toc115030289"></a>**State Diagramm**
-![P1894#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.091.jpeg)
+
+![dRobot-alphapic (10)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/9f6f12d3-a544-46dd-9b26-edbc06db4ba1)
 
 <a name="_toc115029009"></a>Abbildung 11: State Diagramm DRobot Code
 
@@ -198,20 +184,12 @@ Klassen beschrieben.
 1. **Calibrate:**	Um den 0-Koordinatenpunkt zu finden, wird eine Programablauf zur Kalibrierung der Roboterarme durchgeführt.
 
 <a name="_ref115004861"></a>
-### **State 3 Draw**
-Beschreibung des States 3 Draw anhand verschiedener Diagramme:
-### ![P1906#yIS1]
-Abbildung 12: State 3 Draw Flowchart
-### ![P1908#yIS1]
-Abbildung 13: State 3 Draw UML
-### **
+
 ### <a name="_toc115030290"></a>**Klassen**
+Die drei Klassen lassen sich anhand folgender Grafik gut beschreiben.
+
+![dRobot-alphapic (83)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/dd78b687-823b-455b-b563-e961b4b4be81)
 Abbildung 14: Diagramm der Klassen
-![P1912#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.092.png)Die drei Klassen lassen sich anhand folgender Grafik gut beschreiben.
-
-
-
-
 
 ### <a name="_toc115030291"></a>**Berechnungen**
 Dem Roboter werden jeweils Koordinatenpunkte geschickt. Vom aktuellen Standort soll nun der neue Punkt P angefahren werden. 
@@ -231,91 +209,51 @@ Mit der Interpolation zwischen zwei Koordinatenpunkten können wir viele kleine 
 |**y2**|7|mm|**Länge Arm**|640|mm|
 |**yw**|0|mm|**NofSteps**|2213\.298758||
 
-![](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.093.png)
+![dRobot-alphapic (84)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/39d24fdf-5e7a-48ec-b60d-d1fd7ee710af)
 
 <a name="_toc115029010"></a>Abbildung 15: Grafische Darstellung Interpolation
 
 Umso grösser der Abstand zwischen den zwei Koordinatenpunkten ist, umso mehr schritte werden berechnet. 
 
-Xz=1-StepNoS×X1+StepNoS×X2
-Yz=1-StepNoS×Y1+StepNoS×Y2
+Xz=(1-(Step/NoS))×X1+((Step/NoS)×X2)
+Yz=(1-(Step/NoS))×Y1+((Step/NoS)×Y2)
 
 ### <a name="_toc115030293"></a>**Kinematik**
 Zur Berechnung des Einstellwinkels des Schrittmotores wird mit der Inversen Kinematik, vom Koordinatenschnittpunkt aus dem Winkel des Armes berechnet. Dies kann mit der Vektorrechnung oder mit dem Schnittpunkt zweier Kreise berechnet werden.
+
 ### **Schnittpunkt zweier Kreise**
 
-![P1980#yIS1]
+![dRobot-alphapic (92)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/6d6a7ef7-d0bc-4a38-bc75-9c1c1b9b27f5)
 
-<a name="_toc115029011"></a>Abbildung 16: Geometrische Zeichnung der Roboter Arme
+### **Vektorberechnung**
+Die Arme des Deltaroboters können auch als Vektoren aufgezeichnet und berechnet werden. 
 
-Schnittpunkt zweier Kreise:*  K1-K2
-
-K1=x1-xm12+y1-ym12
-K2=x2-xm22+y2-ym22
-Formel der Schnittpunkts Linie zwischen S1 und S2:
-
-fx=mx+b→ m= S1x-S2xS2y-S1y→b=r12-r22+ym22-ym12+xm22-xm122\*(ym1-ym2)
-
-Schnittpunktkoordinaten mit der p-q Formel berechnen:
-
-p=2(-xm1+m(b-ym1)1+m2
-q=xm12+b-ym1×b-ym1-r121+m2
-
-Determinante p22-q>0
-
-X1,2=-p2±p24-q
-Y1,Y2=m×X1,2+b
+![dRobot-alphapic (87)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/95373576-e5af-434b-b154-dc182be9c8ae)
 
 <a name="_toc115029012"></a>Abbildung 17: Vektorzeichnung der Roboterarme
 
-ut[19]=
-### ![P1989TB70#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.095.png)![P1989#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.096.png)**Vektorberechnung**
-Die Arme des Deltaroboters können auch als Vektoren aufgezeichnet und berechnet werden. 
-Ein Versuch mit Mathlab ergab folgende Lösung: 
-![P1990#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.097.png)
-Leider war der Versuch diese Gleichung nach dem gesuchten Winkel V1 aufzulösen, erfolglos. 
 
-
-![P1993#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.098.png)
-
-<a name="_toc115029013"></a>Abbildung 18: Berechnungsversuch mit Mathlab
 ### **Tooloffset**
 Da der Haltegriff für den Schreiber nicht auf dem Schnittpunkt der beiden Arme liegt, sondern etwas versetzt, musste diese Abweichung berechnet werden. 
 
-![P1997#yIS1]
+![dRobot-alphapic (85)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/f14c8bee-efe9-495f-bb77-eb150d74455d)
 
 <a name="_toc115029014"></a>Abbildung 19: Geometrische Zeichnung Roboterarm
 
 Zur Berechnung des Winkels α, wurde bei der Berechnung des Schnittpunktes zweier Kreise, der Radius vr verwendet und nicht wie bisher der Radis vR2. Bevor nun der Winkel des linken Armes berechnet werden kann, wird der Vektor w berechnet und die Koordinaten PA. 
 
-1. Berechne den Vektor vr:	vr=P0-SR1
-1. Winkel vi3 berechnen:	vi3=sin-1vryvR2
-1. Länge von vr berechnen:	P0SR1=vry2+vrx2
-1. Winkel vi4  berechnen:	vi4=cos-1w2+vr2-vR222×vr×w 
-1. Winkel vi5 berechnen:	vi5=180-vi0-vi4
-1. Winkel δvi berechnen:	δvi=360-vi3-vi4
-1. Neue X Koordinaten:		Xz=w×cosδvi+P0x	
-1. Neue Y Koordinaten:		Yz=w×sin(δvi)+P0y
+![dRobot-alphapic (93)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/43e8a3c6-50b5-4a49-a5aa-ef2dcdca22d9)
 
 Nun kann mit der üblichen Berechnungsmethode vom Koordinatenpunkt PA aus, der Winkel des zweiten Armes berechnet werden.
-
 
 ## <a name="_toc115030294"></a>**Programmcode**
 Der Programmcode für den Deltaroboter wurde in der Programmiersprache C++ geschrieben. In diesem Kapitel werden anhand von einzelnen Ausschnitten die wichtigsten Bereiche des Programmes erklärt. 
 
-Der Programcode ist online auf GitHub unter folgendem Link einsehbar. 
-
-<table><tr><th colspan="1" rowspan="2" valign="top"><p>
-<a name="_toc115029015"></a>Abbildung 20: GitHub Profil</p><p>![P2014C1T23#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.100.png)</p></th><th colspan="1" valign="top"><https://github.com/ElTschonni/DROBOT-alpha></th></tr>
-<tr><td colspan="1" valign="top">[Source Code](https://github.com/ElTschonni/DROBOT-alpha/blob/main/DROBOT-code/src/DR_v02_00.cpp)   -> [DROBOT-Library](https://github.com/ElTschonni/DROBOT-alpha/blob/main/DROBOT-code/include/DROBOT.h)</td></tr>
-</table>
-
-
 ### <a name="_toc115030295"></a>**Klassen**
 Es wurden insgesamt 3 Klassen zur Steuerung des Roboters erstellt. 
 ### **Closed\_Loop\_Step\_Motor**
-//=========| 1: CLSM Class: Closed\_Loop\_Step\_Motor  |=============
 
+//=========| 1: CLSM Class: Closed\_Loop\_Step\_Motor  |=============
 class Closed\_Loop\_Step\_Motor  //CLSM
 
 Die Klasse Closed Loop Step Motor wird dafür benötigt, um die Schrittmotoren mit der Angabe eines Winkels zu steuern. So kann dem Motor ein Befehl einen Schritt zu machen erteilt werden. Der Motor rechnet dann den Schrittwinkel zur aktuellen Winkelposition des Motors hinzu. In einer entsprechenden Schlaufe im Hauptprogram werden dann, so viele Schritte gefahren, bis der Zielwinkel erreicht wird. 
@@ -423,15 +361,15 @@ Es gibt 7 Zustände welche in der Endlosschleife im Hauptprogramm aufgerufen wer
 
 <a name="_toc115095546"></a>Tabelle 15: Anzeigebeispiel
 
-|![P2241C1T28#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.101.jpeg)|![P2242C2T28#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.102.jpeg)|![P2243C3T28#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.103.jpeg)|![P2244C4T28#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.104.jpeg)|
-| :-: | :-: | :-: | :-: |
-|state = Init();|state=Calibrate();|state=Standby();|state=Draw();|
+![dRobot-alphapic (11)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/aca948c6-57f7-4168-9957-965fb350b749) ![dRobot-alphapic (12)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/6fe1167a-7573-471f-ac99-f181f38b048d) ![dRobot-alphapic (13)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/4616fe6a-b66d-4aaa-8bca-ad70773d634a) ![dRobot-alphapic (14)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/313f11f9-5df4-4827-8760-62214722d4eb)
 
+|state = Init();|state=Calibrate();|state=Standby();|state=Draw();|
 
 ## <a name="_toc115030297"></a>**Funktion**
 Über die Touchscreens der M5Stack können gewisse Befehle an den Roboter gesendet werden.
 ### <a name="_toc115030298"></a>**Client**
-![P2255#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.105.jpeg)
+
+![dRobot-alphapic (15)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/02113004-9975-4407-a352-12a3f031588f)
 
 <a name="_toc115029016"></a>Abbildung 21: Anzeige Client
 
@@ -440,25 +378,28 @@ Der Client zeigt den aktuellen Status der Roboter Steuerung sowie des Roboters a
 ||Mit dem Betätigen des linken Tasters kann die Datei geöffnet und die Koordinaten an den Roboter geschickt werden. |
 | :- | :- |
 ### <a name="_toc115030299"></a>**Server**
-![P2262#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.106.jpeg)
+
+![dRobot-alphapic (13)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/22460152-cf7d-460f-a607-cbfb229f66dc)
 
 <a name="_toc115029017"></a>Abbildung 22: Anzeige Server
 
 Für den Server wurde ein M5Core2 verwendet. Auf dem Display werden jeweils Informationen zum Aktuellen Status des Roboters angezeigt. Mit 3 Tastern können auch die Stifthalterung oder das Homing gesteuert werden. 
 ### <a name="_toc115030300"></a>**Clamp**
 
-|<p>![P2266C1T30#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.107.jpeg)</p><p><a name="_toc115029018"></a>Abbildung 23: Standby Anzeige</p>|<p>- Mit dem Betätigen des linken Tasters kann die Stifthalterung geschlossen werden.</p><p>- Mit dem Betätigen des mittleren Tasters kann die Stifthalterung geöffnet werden. </p><p></p>|
-| :- | :- |
+![dRobot-alphapic (17)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/14563fc5-d190-4c70-836a-60da28c44e9d)
 
-1. ### <a name="_toc115030301"></a>**Home**
+Mit dem Betätigen des linken Tasters kann die Stifthalterung geschlossen werden.
+Mit dem Betätigen des mittleren Tasters kann die Stifthalterung geöffnet werden. 
 
-|<p>![P2274C1T31#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.108.jpeg)</p><p><a name="_toc115029019"></a>Abbildung 24: Calibrate Anzeige</p>|<p>- Mit dem Betätigen des rechten Tasters kann eine Kalibrierung des Stifthalters durchgeführt werden.</p><p>Dann wechselt der Roboter in den State Calibrate.</p>|
-| :- | :- |
+### <a name="_toc115030301"></a>**Home**
 
+![dRobot-alphapic (12)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/2acbf926-7dae-4983-af0e-4cf295b9a5aa)
 
+Mit dem Betätigen des rechten Tasters kann eine Kalibrierung des Stifthalters durchgeführt werden. Dann wechselt der Roboter in den State Calibrate.
 
 # <a name="_toc115030302"></a>**Anhang**
 ## <a name="_toc115030303"></a>**Abbildungsverzeichnis**
+
 [Abbildung 1: Black Box	6](#_toc115028999)
 
 [Abbildung 2: Grobkonzept Skizze	7](#_toc115029000)
@@ -500,6 +441,10 @@ Für den Server wurde ein M5Core2 verwendet. Auf dem Display werden jeweils Info
 [Abbildung 20: Standby Anzeige	43](#_toc115029018)
 
 [Abbildung 21: Calibrate Anzeige	43](#_toc115029019)
+
+
+![dRobot-alphapic (71)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/921fb3c0-f1f1-4cc8-a977-ede68e9d66a9)
+![dRobot-alphapic (72)](https://github.com/ElTschonni/DROBOT-alpha/assets/108495106/8d7b52f0-620f-4738-abb2-34094c7ad4db)
 
 ## <a name="_toc115030304"></a>**Tabellenverzeichnis**
 [Tabelle 1: Projektplan	2](https://tekoedu.sharepoint.com/sites/a_Gruppenarbeit_Robotik/Freigegebene%20Dokumente/General/01_Dokumentation/01_Dokumentation/Projektdokumentation%20Roboter.docx#_Toc115095532)
