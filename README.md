@@ -7,136 +7,10 @@
 |**Datum:**|26.09.2022|
 
 
-![ref2]	
-
-Inhaltsverzeichnis
-######## <a name="_ref496453709"></a>**Inhaltsverzeichnis**
-[1	Ausgangslage	1](#_toc115030248)
-
-[1.1	Aufgabenstellung	1](#_toc115030249)
-
-[1.2	Meilensteine	1](#_toc115030250)
-
-[2	Planen und Klären	2](#_toc115030251)
-
-[2.1	Projektplan	2](#_toc115030252)
-
-[2.2	Aufgabenabgrenzung	3](#_toc115030253)
-
-[3	Infosammlung	3](#_toc115030254)
-
-[3.1	Infos von Auftraggeber	3](#_toc115030255)
-
-[3.2	Käufliche Lösungen	3](#_toc115030256)
-
-[4	Anforderungsliste	4](#_toc115030257)
-
-[5	Konzipieren	6](#_toc115030258)
-
-[5.1	Black Box	6](#_toc115030259)
-
-[5.2	Prinzipskizze / Grobkonzept	7](#_toc115030260)
-
-[5.3	Funktionsstruktur	8](#_toc115030261)
-
-[5.4	Beschreibung der Gesamtfunktion	9](#_toc115030262)
-
-[5.4.1	Input	9](#_toc115030263)
-
-[5.4.2	Output	9](#_toc115030264)
-
-[5.4.3	Wirkungen von aussen	9](#_toc115030265)
-
-[5.4.4	Wirkungen nach aussen	9](#_toc115030266)
-
-[5.5	Auflistung der Teilfunktionen	10](#_toc115030267)
-
-[5.6	Morphologischer Kasten	11](#_toc115030268)
-
-[	13](#_toc115030269)
-
-[5.7	Bewertung der Teilfunktionen	14](#_toc115030270)
-
-[5.8	Bewertung der Lösungsvarianten	16](#_toc115030271)
-
-[6	Ausarbeitung	17](#_toc115030272)
-
-[6.1	Mechanische Bearbeitung	17](#_toc115030273)
-
-[6.1.1	Frästeile	17](#_toc115030274)
-
-[6.1.2	Drehteile	18](#_toc115030275)
-
-[6.1.3	Bosch-Profile	18](#_toc115030276)
-
-[6.1.4	Normteile	18](#_toc115030277)
-
-[6.2	Arbeitsbereich	20](#_toc115030278)
-
-[6.3	Zusammenstell Zeichnung	21](#_toc115030279)
-
-[7	Hardware	22](#_toc115030280)
-
-[7.1	Hardwarekomponenten	23](#_toc115030281)
-
-[7.1.1	Elektrokomponenten Antrieb	23](#_toc115030282)
-
-[7.1.2	Elektrokomponenten Steuerung	24](#_toc115030283)
-
-[7.2	Verkabelung	25](#_toc115030284)
-
-[8	Software	26](#_toc115030285)
-
-[8.1	Entwicklungsumgebung	26](#_toc115030286)
-
-[8.1.1	GitHub	26](#_toc115030287)
-
-[8.2	Struktur	27](#_toc115030288)
-
-[8.2.1	State Diagramm	29](#_toc115030289)
-
-[8.2.2	Klassen	31](#_toc115030290)
-
-[8.2.3	Berechnungen	32](#_toc115030291)
-
-[8.2.4	Interpolation	32](#_toc115030292)
-
-[8.2.5	Kinematik	33](#_toc115030293)
-
-[8.3	Programmcode	36](#_toc115030294)
-
-[8.3.1	Klassen	36](#_toc115030295)
-
-[8.3.2	State machine	41](#_toc115030296)
-
-[8.4	Funktion	42](#_toc115030297)
-
-[8.4.1	Client	42](#_toc115030298)
-
-[8.4.2	Server	42](#_toc115030299)
-
-[8.4.3	Clamp	43](#_toc115030300)
-
-[8.4.4	Home	43](#_toc115030301)
-
-[9	Anhang	44](#_toc115030302)
-
-[9.1	Abbildungsverzeichnis	44](#_toc115030303)
-
-[9.2	Tabellenverzeichnis	44](#_toc115030304)
-
-[10	Selbständigkeitserklärung	45](#_toc115030305)
-
-
 © Jonathan Ernst, Reto Bissig, Alain Michel, Marcel Bernet, Lorenz Pfyl:	September 2022	II
 
-![ref2]Selbständigkeitserklärung
-1. # <a name="_toc492839097"></a><a name="_toc492842008"></a><a name="_toc492918454"></a><a name="_toc494457144"></a><a name="_toc494470708"></a><a name="_toc115030248"></a><a name="_toc382579068"></a><a name="_toc484451678"></a><a name="_hlk492839002"></a>**Ausgangslage**
-   1. ## <a name="_toc115030249"></a>**Aufgabenstellung**
-Der RR-Deltaroboter ist ein vergleichbar mit einem speziellen Plotter. Dieser wird elektronisch mithilfe einer selbsterstellten Software angesteuert. 
 
-1. # **<a name="_toc115030257"></a>Anforderungsliste**
-
+# **<a name="_toc115030257"></a>Anforderungsliste**
 
 |Revision|Anforderung|F|M|W|Verantwortlich|
 | :- | :- | :- | :- | :- | :- |
@@ -162,7 +36,7 @@ Der RR-Deltaroboter ist ein vergleichbar mit einem speziellen Plotter. Dieser wi
 ||Wiederholgenauigkeit: je genauer, desto besser|||X|Elektrotechnik|
 
 
-1. # <a name="_toc115030280"></a>**Hardware**
+# <a name="_toc115030280"></a>**Hardware**
 Die Hauptbestandteile der Hardware können in drei Gruppen aufgeteilt werden. 
 
 1. Antrieb
@@ -177,7 +51,7 @@ In diesem Kapitel werden die verwendeten Komponenten beschrieben sowie weshalb d
 
 
 
-1. ## <a name="_toc115030281"></a>**Hardwarekomponenten**
+## <a name="_toc115030281"></a>**Hardwarekomponenten**
 Folgende Tabelle zeigt eine Auflistung der Verwendeten Komponenten und ihr Einkaufspreis. Die wichtigsten Elektrokomponenten werden anschliessend kurz beschrieben. 
 
 <a name="_toc115095541"></a>Tabelle 10: Preisliste der Komponenten
