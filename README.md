@@ -8,9 +8,6 @@
 |**Referent:**|A.H|
 |**Datum:**|26.09.2022|
 
-
-© Jonathan Ernst, Reto Bissig, Alain Michel, Marcel Bernet, Lorenz Pfyl:	September 2022	II
-
 # <a name="_toc115030280"></a>**Hardware**
 Die Hauptbestandteile der Hardware können in drei Gruppen aufgeteilt werden. 
 
