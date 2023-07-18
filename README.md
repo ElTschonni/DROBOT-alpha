@@ -1,4 +1,4 @@
-#DROBOT-alpha
+# **<a name="_toc115030257"></a>DROBOT-alpha**
 
 |<p></p><p></p><p>**RR Deltaroboter**</p>||
 | :- | :- |
@@ -43,14 +43,6 @@ Die Hauptbestandteile der Hardware können in drei Gruppen aufgeteilt werden.
 1. Stromversorgung 
 1. Steuerung
 
-In diesem Kapitel werden die verwendeten Komponenten beschrieben sowie weshalb diese gewählt wurden.
-
-<a name="_toc115029001"></a>Abbildung 3: Hardwarekomponenten
-
-![P1533#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.078.png)![P1533TB63#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.079.png)
-
-
-
 ## <a name="_toc115030281"></a>**Hardwarekomponenten**
 Folgende Tabelle zeigt eine Auflistung der Verwendeten Komponenten und ihr Einkaufspreis. Die wichtigsten Elektrokomponenten werden anschliessend kurz beschrieben. 
 
@@ -58,31 +50,31 @@ Folgende Tabelle zeigt eine Auflistung der Verwendeten Komponenten und ihr Einka
 
 |**Bezeichnung**|**Anzahl**|**Preis**|**Preis Total**||
 | :- | :- | :- | :- | :- |
-|JMC Closed Loop Schrittmotor mit integrierter Endstufe|2\.00|108\.47|216\.94||
-|M5Stack Development Kit|1\.00|58\.91|58\.91||
-|Micro switch|3\.00|0\.98|2\.94||
-|RGB LED Strip 1m|1\.00|6\.84|6\.84||
-|Zahnriemen und Zahnräder|1\.00|85\.00|85\.00||
-|Diverse Kugellager und Schrauben|1\.00|10\.00|10\.00||
-|Greifer|1\.00|5\.00|5\.00||
-|Getriebemotor|1\.00|18\.00|18\.00||
-|Catch Unit|1\.00|4\.95|4\.95||
-|Reed sensor|4\.00|3\.76|15\.04||
-|Permanent magnet|4\.00|3\.43|13\.72||
-|Rohmaterial pauschal|1\.00|40\.00|40\.00||
-|Bosch-Profile und Nutensteine pauschal|1\.00|20\.00|20\.00||
-|120W Netzteil Meanwell|3\.00|60\.00|180\.00||
-|6A LS|1\.00|10\.00|10\.00||
-|Relais Modul|2\.00|12\.00|24\.00||
-|PWM Expansionboard|1\.00|21\.00|21\.00||
-|MCP23017 I2C Port Expander|1\.00|2\.00|2\.00||
-|Kabelkanal|3\.00|5\.00|15\.00||
-|Installationsbox|1\.00|65\.00|65\.00||
+|JMC Closed Loop Schrittmotor mit integrierter Endstufe|2\.00|108\.47|216\.94|E|
+|M5Stack Development Kit|1\.00|58\.91|58\.91|E|
+|Micro switch|3\.00|0\.98|2\.94|E|
+|RGB LED Strip 1m|1\.00|6\.84|6\.84|E|
+|Zahnriemen und Zahnräder|1\.00|85\.00|85\.00|M|
+|Diverse Kugellager und Schrauben|1\.00|10\.00|10\.00|M|
+|Greifer|1\.00|5\.00|5\.00|E|
+|Getriebemotor|1\.00|18\.00|18\.00|E|
+|Catch Unit|1\.00|4\.95|4\.95|E|
+|Reed sensor|4\.00|3\.76|15\.04|E|
+|Permanent magnet|4\.00|3\.43|13\.72|E|
+|Rohmaterial pauschal|1\.00|40\.00|40\.00|M|
+|Bosch-Profile und Nutensteine pauschal|1\.00|20\.00|20\.00|M|
+|120W Netzteil Meanwell|3\.00|60\.00|180\.00|E|
+|6A LS|1\.00|10\.00|10\.00|E|
+|Relais Modul|2\.00|12\.00|24\.00|E|
+|PWM Expansionboard|1\.00|21\.00|21\.00|E|
+|MCP23017 I2C Port Expander|1\.00|2\.00|2\.00|E|
+|Kabelkanal|3\.00|5\.00|15\.00|E|
+|Installationsbox|1\.00|65\.00|65\.00|E|
 |Total:|||**814.34**||
 
-||Mechanik Komponente|
+|M|Mechanik Komponente|
 | :- | :- |
-||Elektrokomponente|
+|E|Elektrokomponente|
 
 1. ### <a name="_toc115030282"></a>**Elektrokomponenten Antrieb**
 ### **JMC Closed Loop Schrittmotor mit integrierter Endstufe** 
