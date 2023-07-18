@@ -1,4 +1,4 @@
-![ref1]![P1#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.002.png)
+#DROBOT-alpha
 
 |<p></p><p></p><p>**RR Deltaroboter**</p>||
 | :- | :- |
