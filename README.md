@@ -76,11 +76,12 @@ Folgende Tabelle zeigt eine Auflistung der Verwendeten Komponenten und ihr Einka
 | :- | :- |
 |E|Elektrokomponente|
 
-1. ### <a name="_toc115030282"></a>**Elektrokomponenten Antrieb**
-### **JMC Closed Loop Schrittmotor mit integrierter Endstufe** 
+### <a name="_toc115030282"></a>**Elektrokomponenten Antrieb**
+##### **JMC Closed Loop Schrittmotor mit integrierter Endstufe** 
 <a name="_toc115029002"></a>Abbildung 4: DC-Schrittmotoren
-![P1681#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.080.png)Als Antrieb für die Delta-Arme haben wir uns für einen Schrittmotor mit einem integrierten Treiber sowie einem geschlossenen Regelkreis entschieden. Der Motor korrigiert automatisch, wenn die gesetzte Schrittposition nicht stimmt. Mit bis zu 50'000 Schritten pro Umdrehung kann eine hohe Winkelgenauigkeit erreicht werden. 
+![P1681#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.080.png)
 
+Als Antrieb für die Delta-Arme haben wir uns für einen Schrittmotor mit einem integrierten Treiber sowie einem geschlossenen Regelkreis entschieden. Der Motor korrigiert automatisch, wenn die gesetzte Schrittposition nicht stimmt. Mit bis zu 50'000 Schritten pro Umdrehung kann eine hohe Winkelgenauigkeit erreicht werden. 
 Mit einem «Direction-Bit» kann die Drehrichtung bestimmt werden. Mit jeder Taktflanke am Puls Eingang bewegt sich der Motor um einen Schritt. 
 
 <a name="_toc115095542"></a>Tabelle 11: Winkelgenauigkeit
@@ -89,8 +90,7 @@ Mit einem «Direction-Bit» kann die Drehrichtung bestimmt werden. Mit jeder Tak
 | :- | :- | :- |
 |51200|2\.5|0\.003 °|
 
-
-1. ### <a name="_toc115030283"></a>**Elektrokomponenten Steuerung**
+### <a name="_toc115030283"></a>**Elektrokomponenten Steuerung**
 ### **M5Stack Development Kit![P1694#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.081.jpeg)**
 <a name="_toc115029003"></a>Abbildung 5: M5Stack Core 2
 
@@ -107,7 +107,7 @@ Um dennoch einen Servomotor anschliessen zu können, wurde eine PWM-Erweiterungs
 <a name="_toc115029005"></a>Abbildung 7: MCP23017
 
 ![P1702TB67#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.082.png)![P1702TB66#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.083.png)![P1702#y2](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.084.png)![P1702#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.085.png) 
-1. ## <a name="_toc115030284"></a>**Verkabelung**
+## <a name="_toc115030284"></a>**Verkabelung**
 Für die Verkabelung des Roboters wurde kein Schema erstellt. Mit einer Definition der Ein- und Ausgänge sowie der Bestimmung der Betriebsspannung von 36VDC, konnte die Steuerung, der Motor und die Stromversorgung miteinander verbunden werden. 
 
 <a name="_toc115095543"></a>Tabelle 12: GPIO Port Zuweisung
@@ -136,9 +136,9 @@ Die restliche Verkabelungsarbeit beinhaltet lediglich die Verbindung dieser Komp
 ![P1809#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.086.png)
 
 <a name="_toc115029006"></a>Abbildung 8: Verkabelung
-1. # <a name="_toc115030285"></a>**Software**
+# <a name="_toc115030285"></a>**Software**
 Als wichtiger Teil dieses Projektes bestimmt die Software die Funktionsweise des Roboters. 
-1. ## <a name="_toc115030286"></a>**Entwicklungsumgebung**
+## <a name="_toc115030286"></a>**Entwicklungsumgebung**
 Die Mikrocontroller (M5Stack Core2 und M5Stack) können mit der Entwicklungsumgebung von Arduino programmiert werden. 
 
 ![P1815#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.087.png)
@@ -160,7 +160,7 @@ Bei der Suche nach einer alternative, bietet die Entwicklungsumgebung VS-Code mi
 |7|Notepad++|Texteditor|[**Ê**](https://notepad-plus-plus.org/downloads/)|Anzeigen von Programcode|
 |9|Excel|Tabellenkalkulation|[**Ê**](https://www.microsoft.com/en-us/microsoft-365/excel)|Erstellen von Rechentabellen|
 |10|GeoGebra|Rechner|[**Ê**](https://www.geogebra.org/)|Berechnung von Geometrien|
-1. ### <a name="_toc115030287"></a>**GitHub**
+### <a name="_toc115030287"></a>**GitHub**
 Der Programcode ist online auf GitHub unter folgendem Link einsehbar. 
 
 <table><tr><th colspan="1" rowspan="2" valign="top"><p>
@@ -168,7 +168,7 @@ Der Programcode ist online auf GitHub unter folgendem Link einsehbar.
 <tr><td colspan="1" valign="top">[Source Code](https://github.com/ElTschonni/DROBOT-alpha/blob/main/DROBOT-code/src/DR_v02_00.cpp)   -> [DROBOT-Library](https://github.com/ElTschonni/DROBOT-alpha/blob/main/DROBOT-code/include/DROBOT.h)</td></tr>
 </table>
 
-1. ## <a name="_toc115030288"></a>**Struktur**
+## <a name="_toc115030288"></a>**Struktur**
 Die Programmstruktur wird aufgeteilt in zwei grobe Strukturformen. 
 
 In der Hauprogrammdatei wird der Ablauf geregelt. Mit verschiedenen Klassen, welche sich in einer Bibliothek befinden werden die Probleme gelöst.
@@ -184,7 +184,7 @@ Abbildung 12: State 3 Draw Flowchart
 Abbildung 13: State 3 Draw UML
 ### **
 Klassen beschrieben.
-1. ### <a name="_ref115004502"></a><a name="_toc115030289"></a>**State Diagramm**
+### <a name="_ref115004502"></a><a name="_toc115030289"></a>**State Diagramm**
 ![P1894#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.091.jpeg)
 
 <a name="_toc115029009"></a>Abbildung 11: State Diagramm DRobot Code
@@ -205,7 +205,7 @@ Abbildung 12: State 3 Draw Flowchart
 ### ![P1908#yIS1]
 Abbildung 13: State 3 Draw UML
 ### **
-1. ### <a name="_toc115030290"></a>**Klassen**
+### <a name="_toc115030290"></a>**Klassen**
 Abbildung 14: Diagramm der Klassen
 ![P1912#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.092.png)Die drei Klassen lassen sich anhand folgender Grafik gut beschreiben.
 
@@ -213,11 +213,11 @@ Abbildung 14: Diagramm der Klassen
 
 
 
-1. ### <a name="_toc115030291"></a>**Berechnungen**
+### <a name="_toc115030291"></a>**Berechnungen**
 Dem Roboter werden jeweils Koordinatenpunkte geschickt. Vom aktuellen Standort soll nun der neue Punkt P angefahren werden. 
 
 Nun bedarf es zwei grundlegenden Berechnungen, um auf den Weg zu diesen Koordinaten auf einer gerade Linie abfahren zu können. In einem ersten Schritt wird der Weg in kleine Abschnitte aufgeteilt und es werden für jeden Abschnitt zwischenpunkte berechnet. Zudem muss der Einstellwinkel für den Schrittmotor berechnet werden.
-1. ### <a name="_toc115030292"></a>**Interpolation**
+### <a name="_toc115030292"></a>**Interpolation**
 Mit der Interpolation zwischen zwei Koordinatenpunkten können wir viele kleine Abschnitte auf dieser Linie berechnen. 
 
 <a name="_toc115095545"></a>Tabelle 14: Parameter für die Berechnung der Interpolation
@@ -240,7 +240,7 @@ Umso grösser der Abstand zwischen den zwei Koordinatenpunkten ist, umso mehr sc
 Xz=1-StepNoS×X1+StepNoS×X2
 Yz=1-StepNoS×Y1+StepNoS×Y2
 
-1. ### <a name="_toc115030293"></a>**Kinematik**
+### <a name="_toc115030293"></a>**Kinematik**
 Zur Berechnung des Einstellwinkels des Schrittmotores wird mit der Inversen Kinematik, vom Koordinatenschnittpunkt aus dem Winkel des Armes berechnet. Dies kann mit der Vektorrechnung oder mit dem Schnittpunkt zweier Kreise berechnet werden.
 ### **Schnittpunkt zweier Kreise**
 
@@ -300,7 +300,7 @@ Zur Berechnung des Winkels α, wurde bei der Berechnung des Schnittpunktes zweie
 Nun kann mit der üblichen Berechnungsmethode vom Koordinatenpunkt PA aus, der Winkel des zweiten Armes berechnet werden.
 
 
-1. ## <a name="_toc115030294"></a>**Programmcode**
+## <a name="_toc115030294"></a>**Programmcode**
 Der Programmcode für den Deltaroboter wurde in der Programmiersprache C++ geschrieben. In diesem Kapitel werden anhand von einzelnen Ausschnitten die wichtigsten Bereiche des Programmes erklärt. 
 
 Der Programcode ist online auf GitHub unter folgendem Link einsehbar. 
@@ -311,7 +311,7 @@ Der Programcode ist online auf GitHub unter folgendem Link einsehbar.
 </table>
 
 
-1. ### <a name="_toc115030295"></a>**Klassen**
+### <a name="_toc115030295"></a>**Klassen**
 Es wurden insgesamt 3 Klassen zur Steuerung des Roboters erstellt. 
 ### **Closed\_Loop\_Step\_Motor**
 //=========| 1: CLSM Class: Closed\_Loop\_Step\_Motor  |=============
@@ -398,7 +398,7 @@ Mit der Methode RecalcCoordinates kann die Abweichung vom Stift zum Schnittpunkt
 |<p>void RecalcCoordinates(unsigned long P0X,unsigned long P0Y) </p><p>//Calculate Coordinates after ToolOffset</p>||
 
 
-1. ### <a name="_toc115030296"></a>**State machine**
+### <a name="_toc115030296"></a>**State machine**
 Es gibt 7 Zustände welche in der Endlosschleife im Hauptprogramm aufgerufen werden können. 
 
 `    `switch (state) {
@@ -428,9 +428,9 @@ Es gibt 7 Zustände welche in der Endlosschleife im Hauptprogramm aufgerufen wer
 |state = Init();|state=Calibrate();|state=Standby();|state=Draw();|
 
 
-1. ## <a name="_toc115030297"></a>**Funktion**
+## <a name="_toc115030297"></a>**Funktion**
 Über die Touchscreens der M5Stack können gewisse Befehle an den Roboter gesendet werden.
-1. ### <a name="_toc115030298"></a>**Client**
+### <a name="_toc115030298"></a>**Client**
 ![P2255#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.105.jpeg)
 
 <a name="_toc115029016"></a>Abbildung 21: Anzeige Client
@@ -439,13 +439,13 @@ Der Client zeigt den aktuellen Status der Roboter Steuerung sowie des Roboters a
 
 ||Mit dem Betätigen des linken Tasters kann die Datei geöffnet und die Koordinaten an den Roboter geschickt werden. |
 | :- | :- |
-1. ### <a name="_toc115030299"></a>**Server**
+### <a name="_toc115030299"></a>**Server**
 ![P2262#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.106.jpeg)
 
 <a name="_toc115029017"></a>Abbildung 22: Anzeige Server
 
 Für den Server wurde ein M5Core2 verwendet. Auf dem Display werden jeweils Informationen zum Aktuellen Status des Roboters angezeigt. Mit 3 Tastern können auch die Stifthalterung oder das Homing gesteuert werden. 
-1. ### <a name="_toc115030300"></a>**Clamp**
+### <a name="_toc115030300"></a>**Clamp**
 
 |<p>![P2266C1T30#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.107.jpeg)</p><p><a name="_toc115029018"></a>Abbildung 23: Standby Anzeige</p>|<p>- Mit dem Betätigen des linken Tasters kann die Stifthalterung geschlossen werden.</p><p>- Mit dem Betätigen des mittleren Tasters kann die Stifthalterung geöffnet werden. </p><p></p>|
 | :- | :- |
@@ -457,8 +457,8 @@ Für den Server wurde ein M5Core2 verwendet. Auf dem Display werden jeweils Info
 
 
 
-1. # <a name="_toc115030302"></a>**Anhang**
-   1. ## <a name="_toc115030303"></a>**Abbildungsverzeichnis**
+# <a name="_toc115030302"></a>**Anhang**
+## <a name="_toc115030303"></a>**Abbildungsverzeichnis**
 [Abbildung 1: Black Box	6](#_toc115028999)
 
 [Abbildung 2: Grobkonzept Skizze	7](#_toc115029000)
@@ -500,7 +500,8 @@ Für den Server wurde ein M5Core2 verwendet. Auf dem Display werden jeweils Info
 [Abbildung 20: Standby Anzeige	43](#_toc115029018)
 
 [Abbildung 21: Calibrate Anzeige	43](#_toc115029019)
-1. ## <a name="_toc115030304"></a>**Tabellenverzeichnis**
+
+## <a name="_toc115030304"></a>**Tabellenverzeichnis**
 [Tabelle 1: Projektplan	2](https://tekoedu.sharepoint.com/sites/a_Gruppenarbeit_Robotik/Freigegebene%20Dokumente/General/01_Dokumentation/01_Dokumentation/Projektdokumentation%20Roboter.docx#_Toc115095532)
 
 [Tabelle 2: Anforderungsliste	5](#_toc115095533)
@@ -534,15 +535,10 @@ Für den Server wurde ein M5Core2 verwendet. Auf dem Display werden jeweils Info
 
 
 
-1. # <a name="_toc494457266"></a><a name="_toc115030305"></a>**Selbständigkeitserklärung**
-Ich erkläre hiermit, dass ich die vorliegende Arbeit selbstständig verfasst und keine anderen als die angegebenen Quellen benutzt habe. Alle Stellen, die wörtlich oder sinngemäss aus Quellen entnommen wurden, habe ich als solche kenntlich gemacht. Mir ist bewusst, dass Verstösse gegen die Grundsätze der Selbstständigkeit als Täuschung betrachtet und entsprechend der Prüfungsordnung geahndet werden.
-
+# <a name="_toc494457266"></a><a name="_toc115030305"></a>**Selbständigkeitserklärung**
+Wir erklären hiermit, dass die vorliegende Arbeit selbstständig verfasst und keine anderen als die angegebenen Quellen benutzt wuden. Alle Stellen, die wörtlich oder sinngemäss aus Quellen entnommen wurden, haben wir als solche kenntlich gemacht. 
 Diese Arbeit darf nur mit Genehmigung des Verfassers an Dritte weitergegeben werden.
-
-![P2329#yIS1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.109.png)![](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.110.png)![P2328#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.111.jpeg)Joanthan Ernst    Reto Bissig	Alain Michel		Marcel Bernet		Lorenz Pfyl		
-
-![P2329#y2](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.112.png)![P2329#y1](Aspose.Words.70a3802e-d390-4a62-9d0c-541cbcb047f0.113.png)
-
+Joanthan Ernst    Reto Bissig	Alain Michel		Marcel Bernet		Lorenz Pfyl		
 
 
 Schwyz, 22.09.20![ref1]22
